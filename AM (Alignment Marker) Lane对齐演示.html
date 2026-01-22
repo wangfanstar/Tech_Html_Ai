@@ -1,0 +1,792 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>AM Lane对齐可视化演示</title>  
+    <style>  
+        * {  
+            margin: 0;  
+            padding: 0;  
+            box-sizing: border-box;  
+        }  
+
+        body {  
+            font-family: 'Microsoft YaHei', Arial, sans-serif;  
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
+            padding: 20px;  
+            min-height: 100vh;  
+        }  
+
+        .container {  
+            max-width: 1600px;  
+            margin: 0 auto;  
+            background: white;  
+            border-radius: 20px;  
+            padding: 40px;  
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);  
+        }  
+
+        h1 {  
+            text-align: center;  
+            color: #2c3e50;  
+            margin-bottom: 15px;  
+            font-size: 32px;  
+        }  
+
+        .subtitle {  
+            text-align: center;  
+            color: #7f8c8d;  
+            margin-bottom: 40px;  
+            font-size: 16px;  
+        }  
+
+        .timeline {  
+            background: #f8f9fa;  
+            border-radius: 15px;  
+            padding: 30px;  
+            margin: 30px 0;  
+            border: 3px solid #3498db;  
+        }  
+
+        .timeline-title {  
+            font-size: 20px;  
+            font-weight: bold;  
+            color: #2c3e50;  
+            margin-bottom: 25px;  
+            text-align: center;  
+        }  
+
+        .lane-container {  
+            margin: 15px 0;  
+            background: white;  
+            padding: 15px;  
+            border-radius: 10px;  
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);  
+        }  
+
+        .lane-header {  
+            display: flex;  
+            align-items: center;  
+            margin-bottom: 10px;  
+            gap: 15px;  
+        }  
+
+        .lane-label {  
+            font-weight: bold;  
+            color: #2c3e50;  
+            min-width: 80px;  
+            font-size: 14px;  
+        }  
+
+        .skew-info {  
+            font-size: 12px;  
+            color: #7f8c8d;  
+            font-family: 'Courier New', monospace;  
+        }  
+
+        .block-stream {  
+            display: flex;  
+            gap: 3px;  
+            overflow-x: auto;  
+            padding: 10px 0;  
+            align-items: center;  
+        }  
+
+        .block {  
+            min-width: 50px;  
+            height: 45px;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            border-radius: 6px;  
+            font-size: 12px;  
+            font-weight: bold;  
+            transition: all 0.3s;  
+            cursor: pointer;  
+            position: relative;  
+        }  
+
+        .block.data {  
+            background: #d4edda;  
+            border: 2px solid #28a745;  
+            color: #155724;  
+        }  
+
+        .block.am {  
+            background: linear-gradient(135deg, #f39c12, #e67e22);  
+            border: 3px solid #d35400;  
+            color: white;  
+            min-width: 70px;  
+            animation: amPulse 1.5s infinite;  
+        }  
+
+        .block.delay {  
+            background: #e9ecef;  
+            border: 2px dashed #adb5bd;  
+            color: #6c757d;  
+        }  
+
+        @keyframes amPulse {  
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(243, 156, 18, 0.5); }  
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(243, 156, 18, 0.8); }  
+        }  
+
+        .fifo-container {  
+            margin-top: 40px;  
+            background: #fff3cd;  
+            border: 3px solid #ffc107;  
+            border-radius: 15px;  
+            padding: 25px;  
+        }  
+
+        .fifo-title {  
+            font-size: 18px;  
+            font-weight: bold;  
+            color: #856404;  
+            margin-bottom: 20px;  
+            text-align: center;  
+        }  
+
+        .fifo-lane {  
+            display: flex;  
+            align-items: center;  
+            margin: 12px 0;  
+            gap: 10px;  
+        }  
+
+        .fifo-buffer {  
+            flex: 1;  
+            height: 50px;  
+            background: white;  
+            border: 2px solid #ffc107;  
+            border-radius: 8px;  
+            display: flex;  
+            align-items: center;  
+            padding: 5px;  
+            gap: 3px;  
+            overflow-x: auto;  
+        }  
+
+        .fifo-block {  
+            min-width: 40px;  
+            height: 40px;  
+            background: #d4edda;  
+            border: 2px solid #28a745;  
+            border-radius: 5px;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            font-size: 11px;  
+            font-weight: bold;  
+            color: #155724;  
+        }  
+
+        .aligned-output {  
+            margin-top: 40px;  
+            background: #d1f2eb;  
+            border: 3px solid #27ae60;  
+            border-radius: 15px;  
+            padding: 25px;  
+        }  
+
+        .aligned-title {  
+            font-size: 18px;  
+            font-weight: bold;  
+            color: #145a32;  
+            margin-bottom: 20px;  
+            text-align: center;  
+        }  
+
+        .aligned-stream {  
+            display: flex;  
+            gap: 3px;  
+            justify-content: center;  
+            flex-wrap: wrap;  
+        }  
+
+        .controls {  
+            display: flex;  
+            gap: 15px;  
+            justify-content: center;  
+            margin: 30px 0;  
+            flex-wrap: wrap;  
+        }  
+
+        .btn {  
+            padding: 12px 30px;  
+            border: none;  
+            border-radius: 8px;  
+            font-size: 16px;  
+            font-weight: bold;  
+            cursor: pointer;  
+            transition: all 0.3s;  
+            color: white;  
+        }  
+
+        .btn-primary {  
+            background: linear-gradient(135deg, #3498db, #2980b9);  
+        }  
+
+        .btn-primary:hover {  
+            transform: translateY(-2px);  
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);  
+        }  
+
+        .btn-success {  
+            background: linear-gradient(135deg, #27ae60, #229954);  
+        }  
+
+        .btn-danger {  
+            background: linear-gradient(135deg, #e74c3c, #c0392b);  
+        }  
+
+        .info-panel {  
+            background: #e8f4f8;  
+            border-left: 5px solid #3498db;  
+            padding: 20px;  
+            border-radius: 8px;  
+            margin: 30px 0;  
+        }  
+
+        .info-panel h3 {  
+            color: #2980b9;  
+            margin-bottom: 15px;  
+        }  
+
+        .info-panel ul {  
+            list-style: none;  
+            line-height: 2;  
+            color: #34495e;  
+        }  
+
+        .info-panel li::before {  
+            content: "✓ ";  
+            color: #27ae60;  
+            font-weight: bold;  
+            margin-right: 8px;  
+        }  
+
+        .stats {  
+            display: grid;  
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));  
+            gap: 15px;  
+            margin: 30px 0;  
+        }  
+
+        .stat-card {  
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
+            color: white;  
+            padding: 20px;  
+            border-radius: 12px;  
+            text-align: center;  
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);  
+        }  
+
+        .stat-label {  
+            font-size: 13px;  
+            opacity: 0.9;  
+            margin-bottom: 8px;  
+        }  
+
+        .stat-value {  
+            font-size: 24px;  
+            font-weight: bold;  
+            font-family: 'Courier New', monospace;  
+        }  
+
+        .phase-indicator {  
+            display: flex;  
+            justify-content: center;  
+            gap: 20px;  
+            margin: 30px 0;  
+            flex-wrap: wrap;  
+        }  
+
+        .phase {  
+            padding: 15px 25px;  
+            border-radius: 25px;  
+            font-weight: bold;  
+            font-size: 14px;  
+            transition: all 0.3s;  
+            border: 3px solid transparent;  
+        }  
+
+        .phase.active {  
+            background: linear-gradient(135deg, #27ae60, #2ecc71);  
+            color: white;  
+            border-color: #1e8449;  
+            transform: scale(1.1);  
+            box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);  
+        }  
+
+        .phase.inactive {  
+            background: #ecf0f1;  
+            color: #95a5a6;  
+        }  
+
+        .am-pattern-box {  
+            background: #2c3e50;  
+            color: #2ecc71;  
+            padding: 20px;  
+            border-radius: 12px;  
+            font-family: 'Courier New', monospace;  
+            font-size: 13px;  
+            margin: 20px 0;  
+            line-height: 1.8;  
+        }  
+
+        .highlight {  
+            background: #f39c12;  
+            color: white;  
+            padding: 2px 6px;  
+            border-radius: 3px;  
+            font-weight: bold;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h1>🎯 AM (Alignment Marker) Lane对齐演示</h1>  
+        <p class="subtitle">可视化展示多Lane Skew问题与Deskew解决方案</p>  
+
+        <!-- 阶段指示器 -->  
+        <div class="phase-indicator">  
+            <div class="phase active" id="phase-1">① 初始状态 - Lane Skew</div>  
+            <div class="phase inactive" id="phase-2">② 检测AM标记</div>  
+            <div class="phase inactive" id="phase-3">③ FIFO Deskew</div>  
+            <div class="phase inactive" id="phase-4">④ 对齐完成</div>  
+        </div>  
+
+        <!-- 控制按钮 -->  
+        <div class="controls">  
+            <button class="btn btn-primary" onclick="startDemo()">▶️ 开始演示</button>  
+            <button class="btn btn-success" onclick="stepByStep()">⏭️ 单步执行</button>  
+            <button class="btn btn-danger" onclick="resetDemo()">🔄 重置</button>  
+        </div>  
+
+        <!-- 统计信息 -->  
+        <div class="stats">  
+            <div class="stat-card">  
+                <div class="stat-label">最大Skew</div>  
+                <div class="stat-value" id="max-skew">0 blocks</div>  
+            </div>  
+            <div class="stat-card">  
+                <div class="stat-label">AM间隔</div>  
+                <div class="stat-value">16383 blocks</div>  
+            </div>  
+            <div class="stat-card">  
+                <div class="stat-label">FIFO深度</div>  
+                <div class="stat-value">160 blocks</div>  
+            </div>  
+            <div class="stat-card">  
+                <div class="stat-label">对齐时间</div>  
+                <div class="stat-value" id="align-time">- μs</div>  
+            </div>  
+        </div>  
+
+        <!-- 原始Lane流 (未对齐) -->  
+        <div class="timeline">  
+            <div class="timeline-title">📡 原始接收数据流 (未对齐状态)</div>  
+            <div id="raw-lanes"></div>  
+        </div>  
+
+        <!-- FIFO Deskew缓冲区 -->  
+        <div class="fifo-container" id="fifo-section" style="display: none;">  
+            <div class="fifo-title">🔧 FIFO Deskew 缓冲区 (每Lane独立延迟)</div>  
+            <div id="fifo-lanes"></div>  
+        </div>  
+
+        <!-- 对齐后输出 -->  
+        <div class="aligned-output" id="aligned-section" style="display: none;">  
+            <div class="aligned-title">✅ 对齐后的数据流 (所有Lane同步)</div>  
+            <div class="aligned-stream" id="aligned-stream"></div>  
+        </div>  
+
+        <!-- AM Pattern说明 -->  
+        <div class="am-pattern-box">  
+<strong style="color: #3498db;">AM Pattern结构 (128-bit / 16-byte):</strong>  
+
+Byte 0-11:  <span class="highlight">0x9A4A26B5 C16D7E8F 65B5D94A</span>  (固定识别码)  
+Byte 12:    <span class="highlight">Lane ID</span> (0x00~0x07)  
+Byte 13-15: BIP-8 / Reserved  
+
+作用:  
+• <strong>Lane识别</strong>: 接收端识别每条Lane的编号  
+• <strong>时间戳</strong>: 测量Lane间延迟差异 (Skew)  
+• <strong>对齐参考</strong>: Deskew FIFO的同步点  
+• <strong>持续监控</strong>: 每16383 blocks插入一次，持续校准  
+        </div>  
+
+        <!-- 信息说明 -->  
+        <div class="info-panel">  
+            <h3>🎓 为什么需要AM?</h3>  
+            <ul>  
+                <li><strong>物理路径差异</strong>: 光纤长度、PCB走线、温度变化导致Lane延迟不同</li>  
+                <li><strong>典型Skew值</strong>: 10-40 ns (相当于10-60个block周期)</li>  
+                <li><strong>无AM后果</strong>: 接收端无法正确组装数据，CRC校验100%失败</li>  
+                <li><strong>AM开销</strong>: 仅0.01%带宽，几乎可忽略</li>  
+                <li><strong>对齐速度</strong>: < 1ms完成全部Lane对齐</li>  
+            </ul>  
+        </div>  
+    </div>  
+
+    <script>  
+        const NUM_LANES = 8;  
+        const BLOCKS_PER_LANE = 24;  
+        const AM_POSITION = 12; // AM插入位置  
+        
+        let currentStep = 0;  
+        let laneSkews = [];  
+        let demoInterval = null;  
+
+        // 初始化  
+        function initDemo() {  
+            // 随机生成Lane skew (0-8 blocks)  
+            laneSkews = Array(NUM_LANES).fill(0).map((_, i) =>   
+                i === 0 ? 0 : Math.floor(Math.random() * 8)  
+            );  
+            
+            const maxSkew = Math.max(...laneSkews);  
+            document.getElementById('max-skew').textContent = `${maxSkew} blocks`;  
+            
+            renderRawLanes();  
+        }  
+
+        // 渲染原始Lane  
+        function renderRawLanes() {  
+            const container = document.getElementById('raw-lanes');  
+            container.innerHTML = '';  
+
+            for (let lane = 0; lane < NUM_LANES; lane++) {  
+                const laneDiv = document.createElement('div');  
+                laneDiv.className = 'lane-container';  
+                
+                const header = document.createElement('div');  
+                header.className = 'lane-header';  
+                header.innerHTML = `  
+                    <span class="lane-label">Lane ${lane}</span>  
+                    <span class="skew-info">Skew: ${laneSkews[lane]} blocks (${(laneSkews[lane] * 0.64).toFixed(1)} ns)</span>  
+                `;  
+                
+                const stream = document.createElement('div');  
+                stream.className = 'block-stream';  
+                stream.id = `lane-${lane}-stream`;  
+                
+                // 添加skew delay blocks  
+                for (let i = 0; i < laneSkews[lane]; i++) {  
+                    const delayBlock = document.createElement('div');  
+                    delayBlock.className = 'block delay';  
+                    delayBlock.textContent = '...';  
+                    delayBlock.title = 'Propagation Delay';  
+                    stream.appendChild(delayBlock);  
+                }  
+                
+                // 添加数据blocks  
+                for (let i = 0; i < BLOCKS_PER_LANE; i++) {  
+                    const block = document.createElement('div');  
+                    
+                    if (i === AM_POSITION) {  
+                        block.className = 'block am';  
+                        block.textContent = `AM${lane}`;  
+                        block.title = `Alignment Marker - Lane ${lane}`;  
+                    } else {  
+                        block.className = 'block data';  
+                        block.textContent = `D${i}`;  
+                        block.title = `Data Block ${i}`;  
+                    }  
+                    
+                    stream.appendChild(block);  
+                }  
+                
+                laneDiv.appendChild(header);  
+                laneDiv.appendChild(stream);
+				                container.appendChild(laneDiv);
+            }
+        }
+
+        // 渲染FIFO缓冲区
+        function renderFifoBuffers() {
+            document.getElementById('fifo-section').style.display = 'block';
+            const container = document.getElementById('fifo-lanes');
+            container.innerHTML = '';
+
+            const maxSkew = Math.max(...laneSkews);
+
+            for (let lane = 0; lane < NUM_LANES; lane++) {
+                const fifoDiv = document.createElement('div');
+                fifoDiv.className = 'fifo-lane';
+                
+                const delayNeeded = maxSkew - laneSkews[lane];
+                
+                fifoDiv.innerHTML = `
+                    <span class="lane-label">Lane ${lane} FIFO</span>
+                    <span class="skew-info">延迟补偿: ${delayNeeded} blocks</span>
+                `;
+                
+                const buffer = document.createElement('div');
+                buffer.className = 'fifo-buffer';
+                
+                // 添加延迟blocks
+                for (let i = 0; i < delayNeeded; i++) {
+                    const block = document.createElement('div');
+                    block.className = 'fifo-block';
+                    block.style.background = '#fff3cd';
+                    block.style.borderColor = '#ffc107';
+                    block.textContent = '⏳';
+                    block.title = `FIFO Delay ${i+1}`;
+                    buffer.appendChild(block);
+                }
+                
+                // 添加数据blocks
+                for (let i = 0; i < 6; i++) {
+                    const block = document.createElement('div');
+                    block.className = 'fifo-block';
+                    block.textContent = `D${i}`;
+                    buffer.appendChild(block);
+                }
+                
+                fifoDiv.appendChild(buffer);
+                container.appendChild(fifoDiv);
+            }
+        }
+
+        // 渲染对齐后的输出
+        function renderAlignedOutput() {
+            document.getElementById('aligned-section').style.display = 'block';
+            const container = document.getElementById('aligned-stream');
+            container.innerHTML = '';
+
+            // 显示完美对齐的数据
+            for (let i = 0; i < 16; i++) {
+                const block = document.createElement('div');
+                block.className = 'block data';
+                block.textContent = `D${i}`;
+                block.title = '所有Lane对齐的数据';
+                block.style.minWidth = '60px';
+                container.appendChild(block);
+            }
+
+            // 添加成功标记
+            const successMark = document.createElement('div');
+            successMark.style.cssText = `
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 40px;
+                color: white;
+                margin: 20px auto;
+                box-shadow: 0 10px 30px rgba(39, 174, 96, 0.3);
+                animation: successPop 0.5s ease;
+            `;
+            successMark.textContent = '✓';
+            container.parentElement.appendChild(successMark);
+
+            // 添加动画
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes successPop {
+                    0% { transform: scale(0); opacity: 0; }
+                    50% { transform: scale(1.2); }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 更新阶段指示器
+        function updatePhase(phase) {
+            for (let i = 1; i <= 4; i++) {
+                const phaseEl = document.getElementById(`phase-${i}`);
+                if (i <= phase) {
+                    phaseEl.classList.remove('inactive');
+                    phaseEl.classList.add('active');
+                } else {
+                    phaseEl.classList.remove('active');
+                    phaseEl.classList.add('inactive');
+                }
+            }
+        }
+
+        // 开始演示
+        function startDemo() {
+            resetDemo();
+            currentStep = 0;
+
+            const steps = [
+                () => {
+                    updatePhase(1);
+                    initDemo();
+                },
+                () => {
+                    updatePhase(2);
+                    highlightAMs();
+                },
+                () => {
+                    updatePhase(3);
+                    renderFifoBuffers();
+                    calculateAlignTime();
+                },
+                () => {
+                    updatePhase(4);
+                    renderAlignedOutput();
+                }
+            ];
+
+            let stepIndex = 0;
+            demoInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    steps[stepIndex]();
+                    stepIndex++;
+                } else {
+                    clearInterval(demoInterval);
+                    demoInterval = null;
+                }
+            }, 2000);
+        }
+
+        // 单步执行
+        function stepByStep() {
+            if (demoInterval) {
+                clearInterval(demoInterval);
+                demoInterval = null;
+            }
+
+            const steps = [
+                () => {
+                    updatePhase(1);
+                    initDemo();
+                },
+                () => {
+                    updatePhase(2);
+                    highlightAMs();
+                },
+                () => {
+                    updatePhase(3);
+                    renderFifoBuffers();
+                    calculateAlignTime();
+                },
+                () => {
+                    updatePhase(4);
+                    renderAlignedOutput();
+                }
+            ];
+
+            if (currentStep < steps.length) {
+                steps[currentStep]();
+                currentStep++;
+            }
+        }
+
+        // 高亮AM标记
+        function highlightAMs() {
+            const amBlocks = document.querySelectorAll('.block.am');
+            amBlocks.forEach((block, index) => {
+                setTimeout(() => {
+                    block.style.transform = 'scale(1.3)';
+                    block.style.zIndex = '10';
+                    setTimeout(() => {
+                        block.style.transform = '';
+                    }, 500);
+                }, index * 100);
+            });
+        }
+
+        // 计算对齐时间
+        function calculateAlignTime() {
+            const maxSkew = Math.max(...laneSkews);
+            const blockTime = 0.64; // ns per block @ 800G
+            const totalTime = maxSkew * blockTime + 5; // 加上处理时间
+            document.getElementById('align-time').textContent = `${totalTime.toFixed(1)} μs`;
+        }
+
+        // 重置演示
+        function resetDemo() {
+            if (demoInterval) {
+                clearInterval(demoInterval);
+                demoInterval = null;
+            }
+
+            currentStep = 0;
+            updatePhase(0);
+
+            document.getElementById('raw-lanes').innerHTML = '';
+            document.getElementById('fifo-section').style.display = 'none';
+            document.getElementById('aligned-section').style.display = 'none';
+            document.getElementById('max-skew').textContent = '0 blocks';
+            document.getElementById('align-time').textContent = '- μs';
+
+            // 重新初始化
+            initDemo();
+            updatePhase(1);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initDemo();
+
+            // 添加使用提示
+            setTimeout(() => {
+                const hint = document.createElement('div');
+                hint.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: rgba(52, 152, 219, 0.95);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                    z-index: 1000;
+                    max-width: 350px;
+                    animation: slideIn 0.5s ease;
+                `;
+                hint.innerHTML = `
+                    <strong style="font-size: 16px;">💡 操作提示</strong><br><br>
+                    <div style="line-height: 2;">
+                    🎯 点击"开始演示"查看完整流程<br>
+                    ⏭️ "单步执行"逐步观察每个阶段<br>
+                    🔄 "重置"后可多次体验<br>
+                    🖱️ 鼠标悬停在Block上查看详情<br><br>
+                    <strong>注意观察:</strong><br>
+                    • 橙色闪烁的AM标记<br>
+                    • FIFO如何补偿延迟<br>
+                    • 最终完美对齐的输出
+                    </div>
+                    <button onclick="this.parentElement.remove()" style="
+                        margin-top: 15px;
+                        padding: 8px 20px;
+                        background: white;
+                        color: #3498db;
+                        border: none;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        width: 100%;
+                    ">知道了</button>
+                `;
+
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(400px); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+                document.body.appendChild(hint);
+
+                setTimeout(() => {
+                    hint.style.transition = 'opacity 0.5s';
+                    hint.style.opacity = '0';
+                    setTimeout(() => hint.remove(), 500);
+                }, 15000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

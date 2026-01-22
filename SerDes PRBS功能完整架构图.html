@@ -1,0 +1,1663 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>SerDes PRBS功能完整示意图</title>  
+    <style>  
+        * {  
+            margin: 0;  
+            padding: 0;  
+            box-sizing: border-box;  
+        }  
+
+        body {  
+            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;  
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);  
+            padding: 20px;  
+            color: #fff;  
+            min-height: 100vh;  
+        }  
+
+        .container {  
+            max-width: 1600px;  
+            margin: 0 auto;  
+        }  
+
+        h1 {  
+            text-align: center;  
+            margin-bottom: 30px;  
+            font-size: 2.5em;  
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);  
+            color: #ffd700;  
+        }  
+
+        .main-diagram {  
+            background: rgba(255, 255, 255, 0.1);  
+            border-radius: 20px;  
+            padding: 30px;  
+            margin: 20px 0;  
+            backdrop-filter: blur(10px);  
+            border: 2px solid rgba(255, 215, 0, 0.3);  
+        }  
+
+        .chip-title {  
+            text-align: center;  
+            font-size: 28px;  
+            color: #ffd700;  
+            margin-bottom: 30px;  
+            font-weight: bold;  
+            text-decoration: underline;  
+        }  
+
+        .data-path {  
+            display: flex;  
+            align-items: center;  
+            justify-content: space-between;  
+            margin: 40px 0;  
+            position: relative;  
+        }  
+
+        .module-box {  
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);  
+            border: 3px solid #667eea;  
+            border-radius: 15px;  
+            padding: 20px;  
+            min-width: 180px;  
+            min-height: 120px;  
+            display: flex;  
+            flex-direction: column;  
+            align-items: center;  
+            justify-content: center;  
+            position: relative;  
+            transition: all 0.3s;  
+            cursor: pointer;  
+        }  
+
+        .module-box:hover {  
+            transform: translateY(-5px);  
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);  
+            border-color: #ffd700;  
+        }  
+
+        .module-box.prbs {  
+            background: linear-gradient(135deg, rgba(255, 0, 128, 0.3) 0%, rgba(255, 99, 71, 0.3) 100%);  
+            border-color: #ff0080;  
+            min-width: 220px;  
+            min-height: 140px;  
+        }  
+
+        .module-box.prbs:hover {  
+            box-shadow: 0 10px 25px rgba(255, 0, 128, 0.6);  
+        }  
+
+        .module-box.am {  
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 140, 0, 0.3) 100%);  
+            border-color: #ffd700;  
+        }  
+
+        .module-box.fec {  
+            background: linear-gradient(135deg, rgba(0, 188, 212, 0.3) 0%, rgba(76, 175, 80, 0.3) 100%);  
+            border-color: #00bcd4;  
+        }  
+
+        .module-name {  
+            font-size: 20px;  
+            font-weight: bold;  
+            margin-bottom: 10px;  
+            color: #fff;  
+        }  
+
+        .module-desc {  
+            font-size: 12px;  
+            text-align: center;  
+            color: #ccc;  
+            line-height: 1.4;  
+        }  
+
+        .arrow {  
+            font-size: 40px;  
+            color: #4facfe;  
+            margin: 0 10px;  
+            animation: pulse 2s infinite;  
+        }  
+
+        @keyframes pulse {  
+            0%, 100% { opacity: 1; transform: scale(1); }  
+            50% { opacity: 0.6; transform: scale(1.1); }  
+        }  
+
+        .prbs-switch {  
+            position: absolute;  
+            top: -30px;  
+            left: 50%;  
+            transform: translateX(-50%);  
+            background: rgba(255, 0, 128, 0.8);  
+            padding: 8px 15px;  
+            border-radius: 20px;  
+            font-size: 14px;  
+            font-weight: bold;  
+            border: 2px solid #ffd700;  
+            white-space: nowrap;  
+        }  
+
+        .bypass-arrow {  
+            position: absolute;  
+            top: 50%;  
+            left: 50%;  
+            width: 200px;  
+            height: 2px;  
+            background: #ff0080;  
+            transform: translateY(-50%);  
+            display: none;  
+        }  
+
+        .bypass-arrow.active {  
+            display: block;  
+        }  
+
+        .mode-selector {  
+            text-align: center;  
+            margin: 30px 0;  
+            padding: 20px;  
+            background: rgba(255, 255, 255, 0.1);  
+            border-radius: 15px;  
+        }  
+
+        .mode-btn {  
+            padding: 12px 30px;  
+            margin: 0 10px;  
+            font-size: 16px;  
+            font-weight: bold;  
+            border: 3px solid;  
+            border-radius: 25px;  
+            cursor: pointer;  
+            transition: all 0.3s;  
+            background: rgba(0, 0, 0, 0.5);  
+            color: #fff;  
+        }  
+
+        .mode-btn.normal {  
+            border-color: #667eea;  
+        }  
+
+        .mode-btn.prbs {  
+            border-color: #ff0080;  
+        }  
+
+        .mode-btn.active {  
+            background: linear-gradient(135deg, #ff0080 0%, #ff6347 100%);  
+            box-shadow: 0 5px 15px rgba(255, 0, 128, 0.5);  
+            transform: scale(1.05);  
+        }  
+
+        .prbs-details {  
+            display: grid;  
+            grid-template-columns: repeat(2, 1fr);  
+            gap: 20px;  
+            margin: 30px 0;  
+        }  
+
+        .detail-card {  
+            background: rgba(255, 255, 255, 0.1);  
+            border-radius: 15px;  
+            padding: 25px;  
+            border: 2px solid rgba(255, 215, 0, 0.3);  
+        }  
+
+        .detail-card h3 {  
+            color: #ffd700;  
+            margin-bottom: 15px;  
+            font-size: 20px;  
+            border-bottom: 2px solid #ffd700;  
+            padding-bottom: 10px;  
+        }  
+
+        .prbs-pattern {  
+            background: rgba(0, 0, 0, 0.6);  
+            padding: 15px;  
+            border-radius: 8px;  
+            font-family: 'Courier New', monospace;  
+            font-size: 13px;  
+            margin: 15px 0;  
+            line-height: 1.8;  
+            border-left: 4px solid #ff0080;  
+            white-space: pre-wrap;  
+            word-wrap: break-word;  
+        }  
+
+        .criteria-list {  
+            list-style: none;  
+            padding: 0;  
+        }  
+
+        .criteria-list li {  
+            padding: 10px;  
+            margin: 8px 0;  
+            background: rgba(0, 0, 0, 0.3);  
+            border-radius: 8px;  
+            border-left: 4px solid #4facfe;  
+            position: relative;  
+            padding-left: 40px;  
+        }  
+
+        .criteria-list li:before {  
+            content: '✓';  
+            position: absolute;  
+            left: 15px;  
+            color: #44ff44;  
+            font-weight: bold;  
+            font-size: 18px;  
+        }  
+
+        .flowchart {  
+            background: rgba(0, 0, 0, 0.3);  
+            padding: 25px;  
+            border-radius: 15px;  
+            margin: 20px 0;  
+        }  
+
+        .flow-step {  
+            background: rgba(255, 255, 255, 0.1);  
+            border: 2px solid #4facfe;  
+            border-radius: 10px;  
+            padding: 15px;  
+            margin: 15px 0;  
+            position: relative;  
+            transition: all 0.3s;  
+        }  
+
+        .flow-step:hover {  
+            background: rgba(255, 255, 255, 0.2);  
+            transform: translateX(5px);  
+        }  
+
+        .flow-step:after {  
+            content: '↓';  
+            position: absolute;  
+            bottom: -25px;  
+            left: 50%;  
+            transform: translateX(-50%);  
+            font-size: 24px;  
+            color: #4facfe;  
+        }  
+
+        .flow-step:last-child:after {  
+            content: '';  
+        }  
+
+        .step-number {  
+            display: inline-block;  
+            width: 30px;  
+            height: 30px;  
+            background: #ff0080;  
+            border-radius: 50%;  
+            text-align: center;  
+            line-height: 30px;  
+            margin-right: 10px;  
+            font-weight: bold;  
+        }  
+
+        .comparison-table {  
+            width: 100%;  
+            border-collapse: collapse;  
+            margin: 20px 0;  
+            background: rgba(0, 0, 0, 0.3);  
+        }  
+
+        .comparison-table th,  
+        .comparison-table td {  
+            padding: 15px;  
+            text-align: left;  
+            border: 1px solid rgba(255, 255, 255, 0.3);  
+        }  
+
+        .comparison-table th {  
+            background: rgba(255, 0, 128, 0.3);  
+            font-weight: bold;  
+            color: #ffd700;  
+        }  
+
+        .comparison-table tr:hover {  
+            background: rgba(255, 255, 255, 0.1);  
+        }  
+
+        .highlight {  
+            color: #ffd700;  
+            font-weight: bold;  
+        }  
+
+        .emphasis {  
+            color: #ff0080;  
+            font-weight: bold;  
+        }  
+
+        .good {  
+            color: #44ff44;  
+        }  
+
+        .bad {  
+            color: #ff4444;  
+        }  
+
+        .info-box {  
+            background: rgba(255, 215, 0, 0.2);  
+            border: 2px solid #ffd700;  
+            border-radius: 10px;  
+            padding: 15px;  
+            margin: 15px 0;  
+        }  
+
+        .info-box-title {  
+            font-size: 18px;  
+            font-weight: bold;  
+            color: #ffd700;  
+            margin-bottom: 10px;  
+        }  
+
+        .tabs {  
+            display: flex;  
+            gap: 10px;  
+            margin-bottom: 20px;  
+            justify-content: center;  
+            flex-wrap: wrap;  
+        }  
+
+        .tab-btn {  
+            padding: 12px 24px;  
+            background: rgba(255, 255, 255, 0.2);  
+            border: 2px solid rgba(255, 255, 255, 0.3);  
+            border-radius: 8px;  
+            color: #fff;  
+            cursor: pointer;  
+            transition: all 0.3s;  
+            font-size: 16px;  
+            font-weight: bold;  
+        }  
+
+        .tab-btn:hover {  
+            background: rgba(255, 215, 0, 0.3);  
+            border-color: #ffd700;  
+        }  
+
+        .tab-btn.active {  
+            background: linear-gradient(135deg, #ff0080 0%, #ff6347 100%);  
+            border-color: #ffd700;  
+        }  
+
+        .tab-content {  
+            display: none;  
+        }  
+
+        .tab-content.active {  
+            display: block;  
+            animation: fadeIn 0.5s;  
+        }  
+
+        @keyframes fadeIn {  
+            from { opacity: 0; transform: translateY(10px); }  
+            to { opacity: 1; transform: translateY(0); }  
+        }  
+
+        .status-indicator {  
+            display: inline-block;  
+            width: 12px;  
+            height: 12px;  
+            border-radius: 50%;  
+            margin-right: 8px;  
+        }  
+
+        .status-indicator.ok {  
+            background: #44ff44;  
+            box-shadow: 0 0 10px #44ff44;  
+        }  
+
+        .status-indicator.error {  
+            background: #ff4444;  
+            box-shadow: 0 0 10px #ff4444;  
+        }  
+
+        .status-indicator.warning {  
+            background: #ffaa00;  
+            box-shadow: 0 0 10px #ffaa00;  
+        }  
+
+        @media (max-width: 1200px) {  
+            .prbs-details {  
+                grid-template-columns: 1fr;  
+            }  
+            .data-path {  
+                flex-direction: column;  
+            }  
+            .arrow {  
+                transform: rotate(90deg);  
+                margin: 20px 0;  
+            }  
+        }  
+
+        .register-view {  
+            background: rgba(0, 0, 0, 0.6);  
+            padding: 20px;  
+            border-radius: 10px;  
+            margin: 20px 0;  
+            font-family: 'Courier New', monospace;  
+            font-size: 13px;  
+        }  
+
+        .register-row {  
+            display: flex;  
+            justify-content: space-between;  
+            padding: 8px;  
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);  
+        }  
+
+        .register-row:hover {  
+            background: rgba(255, 255, 255, 0.1);  
+        }  
+
+        .reg-name {  
+            color: #4facfe;  
+            font-weight: bold;  
+            width: 200px;  
+        }  
+
+        .reg-value {  
+            color: #44ff44;  
+            font-family: 'Courier New', monospace;  
+        }  
+
+        .reg-desc {  
+            color: #ccc;  
+            font-size: 12px;  
+            flex: 1;  
+            margin-left: 20px;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h1>🔬 SerDes PRBS功能完整架构图</h1>  
+
+        <!-- 模式选择器 -->  
+        <div class="mode-selector">  
+            <h2 style="color: #ffd700; margin-bottom: 20px;">选择工作模式</h2>  
+            <button class="mode-btn normal active" onclick="switchMode('normal')">  
+                📡 正常模式 (Normal Data Path)  
+            </button>  
+            <button class="mode-btn prbs" onclick="switchMode('prbs')">  
+                🔧 PRBS测试模式 (PRBS Test Mode)  
+            </button>  
+        </div>  
+
+        <!-- 标签页 -->  
+        <div class="tabs">  
+            <button class="tab-btn active" onclick="switchTab('architecture')">🏗️ 架构图</button>  
+            <button class="tab-btn" onclick="switchTab('criteria')">📊 判断标准</button>  
+            <button class="tab-btn" onclick="switchTab('flowchart')">🔄 处理流程</button>  
+            <button class="tab-btn" onclick="switchTab('registers')">⚙️ 寄存器配置</button>  
+        </div>  
+
+        <!-- Tab 1: 架构图 -->  
+        <div id="architecture" class="tab-content active">  
+            <div class="main-diagram">  
+                <div class="chip-title">🔲 SerDes 芯片内部架构</div>  
+
+                <!-- TX路径 -->  
+                <div style="margin-bottom: 50px;">  
+                    <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">  
+                        📤 发送路径 (TX Path)  
+                    </h2>  
+                    <div class="data-path" id="tx-path">  
+                        <div class="module-box">  
+                            <div class="module-name">MAC层</div>  
+                            <div class="module-desc">以太网帧<br>生成</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box">  
+                            <div class="module-name">PCS</div>  
+                            <div class="module-desc">64B/66B<br>编码<br>Scrambler</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box prbs" id="tx-prbs">  
+                            <div class="prbs-switch">PRBS开关</div>  
+                            <div class="module-name">PRBS Gen</div>  
+                            <div class="module-desc">  
+                                <span class="emphasis">PRBS7/9/11/13/15/23/31</span><br>  
+                                伪随机序列生成器  
+                            </div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box am">  
+                            <div class="module-name">AM插入</div>  
+                            <div class="module-desc">Alignment<br>Marker<br>周期插入</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box fec">  
+                            <div class="module-name">FEC编码</div>  
+                            <div class="module-desc">RS(544,514)<br>纠错编码<br>添加校验</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box">  
+                            <div class="module-name">SerDes TX</div>  
+                            <div class="module-desc">并串转换<br>Pre-emphasis<br>光发送</div>  
+                        </div>  
+                    </div>  
+
+                    <div class="info-box">  
+                        <div class="info-box-title">🔍 TX路径关键点</div>  
+                        <ul style="line-height: 2;">  
+                            <li><span class="highlight">PRBS Generator位置：</span>在PCS之后、AM插入之前</li>  
+                            <li><span class="highlight">PRBS启用时：</span>绕过MAC和PCS，直接生成伪随机序列</li>  
+                            <li><span class="emphasis">AM仍然插入：</span>PRBS模式下AM码正常工作，用于接收端对齐</li>  
+                            <li><span class="emphasis">FEC仍然编码：</span>PRBS数据参与FEC编码（可选配置）</li>  
+                        </ul>  
+                    </div>  
+                </div>  
+
+                <!-- 光纤传输 -->  
+                <div style="text-align: center; margin: 40px 0;">  
+                    <div style="font-size: 48px; color: #ffd700;">  
+                        ╔═══════════════════════════════════════════╗<br>  
+                        ║　　　　　🌐 光纤/电缆传输　　　　　　　　║<br>  
+                        ║　PRBS + AM + FEC → 物理介质 → RX　　　 ║<br>  
+                        ╚═══════════════════════════════════════════╝  
+                    </div>  
+                </div>  
+
+                <!-- RX路径 -->  
+                <div>  
+                    <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">  
+                        📥 接收路径 (RX Path)  
+                    </h2>  
+                    <div class="data-path" id="rx-path">  
+                        <div class="module-box">  
+                            <div class="module-name">SerDes RX</div>  
+                            <div class="module-desc">串并转换<br>CDR时钟恢复<br>均衡</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box fec">  
+                            <div class="module-name">FEC解码</div>  
+                            <div class="module-desc">错误检测<br>错误纠正<br>统计BER</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box am">  
+                            <div class="module-name">AM检测</div>  
+                            <div class="module-desc">Marker识别<br>Lane对齐<br>Deskew</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box prbs" id="rx-prbs">  
+                            <div class="prbs-switch">PRBS Checker</div>  
+                            <div class="module-name">PRBS Check</div>  
+                            <div class="module-desc">  
+                                <span class="emphasis">序列验证</span><br>  
+                                错误计数<br>  
+                                <span class="good">BER统计</span>  
+                            </div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box">  
+                            <div class="module-name">PCS</div>  
+                            <div class="module-desc">64B/66B<br>解码<br>Descrambler</div>  
+                        </div>  
+
+                        <div class="arrow">→</div>  
+
+                        <div class="module-box">  
+                            <div class="module-name">MAC层</div>  
+                            <div class="module-desc">以太网帧<br>接收处理</div>  
+                        </div>  
+                    </div>  
+
+                    <div class="info-box">  
+                        <div class="info-box-title">🔍 RX路径关键点</div>  
+                        <ul style="line-height: 2;">  
+                            <li><span class="highlight">PRBS Checker位置：</span>在AM检测之后、PCS之前</li>  
+                            <li><span class="highlight">PRBS检查时：</span>与发送端的PRBS序列逐bit比对</li>  
+                            <li><span class="emphasis">AM必须正确：</span>AM错误会导致PRBS无法同步</li>  
+                            <li><span class="emphasis">FEC纠错后再检查：</span>PRBS统计的是FEC后的BER</li>  
+                        </ul>  
+                    </div>  
+                </div>  
+            </div>  
+
+            <!-- PRBS与AM/FEC的关系 -->  
+            <div class="main-diagram">  
+                <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">  
+                    🔗 PRBS与AM/FEC的交互关系  
+                </h2>  
+                <div class="prbs-details">  
+                    <div class="detail-card">  
+                        <h3>📍 PRBS与AM的关系</h3>  
+                        <div class="prbs-pattern">  
+┌────────────────────────────────────────┐  
+│  TX端数据流：                          │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  [PRBS][PRBS][PRBS]...[PRBS]           │  
+│                  ↓                     │  
+│              插入AM码                  │  
+│                  ↓                     │  
+│  [PRBS][AM][PRBS][PRBS][AM][PRBS]...   │  
+│         ↑              ↑               │  
+│    每16384 Block    每16384 Block      │  
+│                                        │  
+│  RX端处理：                            │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  1. 先检测AM → 建立Block边界           │  
+│  2. AM检测成功 → 才能同步PRBS          │  
+│  3. 跳过AM Block → 继续检查PRBS        │  
+│                                        │  
+│  关键点：                              │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  <span class="emphasis">• AM不参与PRBS校验</span>                  │  
+│  <span class="emphasis">• AM必须正确才能Lock PRBS</span>           │  
+│  • AM位置固定，不影响PRBS连续性        │  
+└────────────────────────────────────────┘  
+                        </div>  
+                        <ul class="criteria-list" style="margin-top: 15px;">  
+                            <li>AM码<span class="highlight">透传</span>，不被PRBS Generator替换</li>  
+                            <li>PRBS Checker在AM位置<span class="highlight">暂停检查</span></li>  
+                            <li>AM Lock是PRBS Lock的<span class="emphasis">前提条件</span></li>  
+                        </ul>  
+                    </div>  
+
+                    <div class="detail-card">  
+                        <h3>🛡️ PRBS与FEC的关系</h3>  
+                        <div class="prbs-pattern">  
+┌────────────────────────────────────────┐  
+│  TX端编码流程：                        │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  PRBS Generator                        │  
+│       ↓                                │  
+│  [PRBS Data] (514 symbols)             │  
+│       ↓                                │  
+│  FEC Encoder (RS编码)                  │  
+│       ↓                                │  
+│  [PRBS Data + FEC Parity] (544 sym)    │  
+│   ↑─────514────↑─30──↑                │  
+│                                        │  
+│  RX端解码流程：                        │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  接收 [Data + Parity]                  │  
+│       ↓                                │  
+│  FEC Decoder                           │  
+│  • 检测错误                            │  
+│  • 纠正错误（最多15 symbols）          │  
+│       ↓                                │  
+│  [Corrected PRBS Data]                 │  
+│       ↓                                │  
+│  PRBS Checker                          │  
+│  • 验证序列                            │  
+│  • 统计剩余错误（<span class="good">FEC后BER</span>）          │  
+│                                        │  
+│  两种配置模式：                        │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  模式1：FEC开启                        │  
+│  • PRBS统计 = <span class="highlight">FEC纠错后的BER</span>        │  
+│  • 反映FEC性能                         │  
+│  • 应用场景：系统级测试                │  
+│                                        │  
+│  模式2：FEC关闭（Bypass）              │  
+│  • PRBS统计 = <span class="highlight">原始信道BER</span>           │  
+│  • 反映物理层质量                      │  
+│  • 应用场景：SerDes调试                │  
+└────────────────────────────────────────┘  
+                        </div>  
+                        <ul class="criteria-list" style="margin-top: 15px;">  
+                            <li>FEC开启：测试<span class="highlight">系统级BER</span>（应用层看到的）</li>  
+                            <li>FEC关闭：测试<span class="highlight">物理层BER</span>（信道原始质量）</li>  
+                            <li>FEC能纠正PRBS错误，降低最终BER</li>  
+                        </ul>  
+                    </div>  
+                </div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 2: 判断标准 -->  
+        <div id="criteria" class="tab-content">  
+            <div class="main-diagram">  
+                <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">  
+                    📊 PRBS测试判断标准  
+                </h2>  
+
+                <div class="detail-card">  
+                    <h3>🎯 PRBS Lock（同步锁定）条件</h3>  
+                    <div class="prbs-pattern">  
+PRBS同步状态机：  
+
+初始状态：UNLOCKED  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+↓  
+搜索PRBS Pattern（对齐多项式）  
+↓  
+<span class="highlight">条件1：连续N个正确的PRBS位</span>  
+• PRBS7:  连续127 bits正确  
+• PRBS15: 连续255 bits正确  
+• PRBS23: 连续511 bits正确  
+• PRBS31: 连续1023 bits正确  
+↓  
+<span class="good">状态：LOCKED（已同步）</span>  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+
+维持LOCKED状态：  
+<span class="highlight">条件2：错误率低于阈值</span>  
+• 每1M bits内，错误 < 100 bits  
+• 即 BER < 1e-4  
+
+失锁条件（LOCKED → UNLOCKED）：  
+<span class="bad">条件3：连续错误过多</span>  
+• 连续64 bits内，超过16个错误  
+• 或持续5秒 BER > 1e-3  
+                    </div>  
+
+                    <table class="comparison-table" style="margin-top: 20px;">  
+                        <tr>  
+                            <th>PRBS类型</th>  
+                            <th>多项式</th>  
+                            <th>周期长度</th>  
+                            <th>Lock所需时间<br>(@25.78125 Gbps)</th>  
+                        </tr>  
+                        <tr>  
+                            <td><strong>PRBS7</strong></td>  
+                            <td>x⁷ + x⁶ + 1</td>  
+                            <td>2⁷-1 = 127 bits</td>  
+                            <td>~5 ns</td>  
+                        </tr>  
+                        <tr>  
+                            <td><strong>PRBS9</strong></td>  
+                            <td>x⁹ + x⁵ + 1</td>  
+                            <td>2⁹-1 = 511 bits</td>  
+                            <td>~20 ns</td>  
+                        </tr>  
+                        <tr>  
+                            <td><strong>PRBS11</strong></td>  
+                            <td>x¹¹ + x⁹ + 1</td>  
+                            <td>2¹¹-1 = 2047 bits</td>  
+                            <td>~80 ns</td>  
+                        </tr>  
+                        <tr>  
+                            <td><strong>PRBS15</strong></td>  
+                            <td>x¹⁵ + x¹⁴ + 1</td>  
+                            <td>2¹⁵-1 = 32767 bits</td>  
+                            <td>~1.3 μs</td>  
+                        </tr>  
+                        <tr>  
+                            <td><strong>PRBS23</strong></td>  
+                            <td>x²³ + x¹⁸ + 1</td>  
+                            <td>2²³-1 = 8388607 bits</td>  
+                            <td>~325 μs</td>  
+                        </tr>  
+                        <tr>  
+                            <td><strong>PRBS31</strong></td>  
+                            <td>x³¹ + x²⁸ + 1</td>  
+                            <td>2³¹-1 = 2147483647 bits</td>  
+                            <td>~83 ms</td>  
+                        </tr>  
+                    </table>  
+                </div>  
+
+                <div class="prbs-details" style="margin-top: 30px;">  
+                    <div class="detail-card">  
+                        <h3>✅ PASS判断标准</h3>  
+                        <ul class="criteria-list">  
+                            <li><span class="status-indicator ok"></span><span class="highlight">BER ≤ 1e-12</span>（优秀）</li>  
+                            <li><span class="status-indicator ok"></span>连续测试1小时无失锁</li>  
+                            <li><span class="status-indicator ok"></span>Total Error Count < 1000</li>  
+                            <li><span class="status-indicator ok"></span>AM Lock稳定（多Lane系统）</li>  
+                            <li><span class="status-indicator ok"></span>FEC Corrected Errors < Uncorrected</li>  
+                        </ul>  
+                        <div class="info-box" style="margin-top: 15px;">  
+                            <div class="info-box-title">典型BER要求</div>  
+                            <div class="prbs-pattern">  
+应用场景            BER要求          测试时长  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+• 数据中心          ≤ 1e-12         1小时  
+• 5G前传           ≤ 1e-13         24小时  
+• 长距传输          ≤ 1e-15         1周  
+• 高可靠系统        ≤ 1e-18         持续监控  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+                            </div>  
+                        </div>  
+                    </div>  
+
+                    <div class="detail-card">  
+                        <h3>❌ FAIL判断标准</h3>  
+                        <ul class="criteria-list">  
+                            <li><span class="status-indicator error"></span><span class="bad">BER > 1e-6</span>（不可用）</li>  
+                            <li><span class="status-indicator error"></span>持续10秒无法Lock PRBS</li>  
+                            <li><span class="status-indicator error"></span>频繁失锁（每分钟>3次）</li>  
+                            <li><span class="status-indicator error"></span>AM无法Lock（多Lane失步）</li>  
+                            <li><span class="status-indicator error"></span>FEC Uncorrected Errors持续增加</li>  
+                            <li><span class="status-indicator warning"></span>误码突发（Burst Error）</li>  
+                        </ul>  
+                        <div class="info-box" style="margin-top: 15px;">  
+                            <div class="info-box-title">常见失败原因</div>  
+                            <div class="prbs-pattern">  
+BER范围           可能原因                   处理建议  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+1e-3 ~ 1e-6      • 光功率过低               → 检查光模块  
+                 • 预加重不足               → 调整TX均衡  
+                 • CDR未锁定                → 检查参考时钟  
+
+1e-6 ~ 1e-9      • 信号完整性问题           → 优化PCB走线  
+                 • 串扰                     → 增加屏蔽  
+                 • 抖动过大                 → 改善时钟质量  
+
+1e-9 ~ 1e-12     • 边缘码间干扰             → 微调RX均衡  
+                 • 温度漂移                 → 环境控制  
+                 • 老化                     → 预防性维护  
+
+< 1e-12          <span class="good">正常工作范围</span>              → 继续监控  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+                            </div>  
+                        </div>  
+                    </div>  
+                </div>  
+
+                <div class="detail-card" style="margin-top: 30px;">  
+                    <h3>📈 BER统计方法</h3>  
+                    <div class="prbs-pattern">  
+BER计算公式：  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+BER = Error_Bit_Count / Total_Bit_Count  
+
+例如：  
+• 测试时间：1小时 = 3600秒  
+• 速率：25.78125 Gbps  
+• 总传输bit数：25.78125e9 × 3600 = 9.28e13 bits  
+• 检测到错误：93 bits  
+• 计算BER：93 / 9.28e13 ≈ <span class="good">1.0e-12</span> ✓  
+
+置信度：  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+目标BER      最小测试位数        建议测试时长(@25G)  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+1e-9         1e11 bits          ~4秒  
+1e-10        1e12 bits          ~40秒  
+1e-11        1e13 bits          ~6分钟  
+1e-12        1e14 bits          ~1小时  
+1e-13        1e15 bits          ~10小时  
+1e-15        1e17 bits          ~45天  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+
+<span class="emphasis">注意：至少需要检测到10个错误才有统计意义！</span>  
+                    </div>  
+                </div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 3: 处理流程 -->  
+        <div id="flowchart" class="tab-content">  
+            <div class="main-diagram">  
+                <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">  
+                    🔄 PRBS测试完整处理流程  
+                </h2>  
+
+                <div class="flowchart">  
+                    <h3 style="color: #ffd700; margin-bottom: 20px;">📤 发送端流程</h3>  
+                    
+                    <div class="flow-step">  
+                        <span class="step-number">1</span>  
+                        <strong>配置PRBS模式</strong>  
+                        <div class="prbs-pattern">  
+寄存器配置：  
+• PRBS_TX_EN = 1           // 使能PRBS发送  
+• PRBS_TYPE = PRBS31       // 选择PRBS类型  
+• PRBS_TX_INV = 0          // 反相（可选）  
+• AM_INSERT_EN = 1         // 保持AM插入  
+• FEC_EN = 1/0             // FEC开关（根据测试需求）  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">2</span>  
+                        <strong>PRBS Generator初始化</strong>  
+                        <div class="prbs-pattern">  
+• 加载初始种子（Seed）：通常为全1  
+• 初始化LFSR（线性反馈移位寄存器）  
+• 开始生成伪随机序列  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">3</span>  
+                        <strong>数据流生成</strong>  
+                        <div class="prbs-pattern">  
+每个时钟周期：  
+┌─────────────────────────────────────┐  
+│  PRBS Gen → [64-bit PRBS Data]      │  
+│             ↓                       │  
+│  AM Insert → 每16384 Block插入AM    │  
+│             ↓                       │  
+│  FEC Encode → 添加30 Parity符号     │  
+│             ↓                       │  
+│  SerDes TX → 发送到物理介质         │  
+└─────────────────────────────────────┘  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">4</span>  
+                        <strong>持续监控</strong>  
+                        <div class="prbs-pattern">  
+• TX_PRBS_BIT_COUNT：累计发送bit数  
+• TX_STATUS：发送状态（Running/Error）  
+• 温度/电压监控  
+                        </div>  
+                    </div>  
+                </div>  
+
+                <div class="flowchart" style="margin-top: 30px;">  
+                    <h3 style="color: #ffd700; margin-bottom: 20px;">📥 接收端流程</h3>  
+                    
+                    <div class="flow-step">  
+                        <span class="step-number">1</span>  
+                        <strong>物理层同步</strong>  
+                        <div class="prbs-pattern">  
+<span class="highlight">前提条件（必须全部满足）：</span>  
+┌─────────────────────────────────────┐  
+│ ✓ CDR锁定（时钟恢复成功）           │  
+│ ✓ Lane对齐（多Lane系统）            │  
+│ ✓ AM Lock（检测到正确的AM Pattern） │  
+│ ✓ 信号质量达标（Eye Diagram打开）   │  
+└─────────────────────────────────────┘  
+
+检查寄存器：  
+• CDR_LOCK = 1  
+• AM_LOCK = 1 (所有Lane)  
+• SIGNAL_DETECT = 1  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">2</span>  
+                        <strong>配置PRBS Checker</strong>  
+                        <div class="prbs-pattern">  
+寄存器配置：  
+• PRBS_RX_EN = 1           // 使能PRBS检查  
+• PRBS_TYPE = PRBS31       // 必须与TX匹配  
+• PRBS_RX_INV = 0          // 反相（与TX对应）  
+• ERROR_COUNT_MODE = 0     // 0=累计, 1=速率  
+• LOCK_THRESHOLD = 127     // Lock阈值  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">3</span>  
+                        <strong>PRBS同步（Lock过程）</strong>  
+                        <div class="prbs-pattern">  
+状态机流程：  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[UNLOCKED] 初始状态  
+    ↓  
+搜索PRBS Pattern（尝试所有可能相位）  
+    ↓  
+<span class="highlight">连续127 bits匹配？</span>（PRBS7示例）  
+    ├─ 是 → [LOCKED] 同步成功  
+    └─ 否 → 继续搜索  
+
+[LOCKED] 状态维护  
+    ↓  
+持续比对接收数据与本地PRBS  
+    ↓  
+错误率 < 阈值？  
+    ├─ 是 → 保持LOCKED  
+    └─ 否 → [UNLOCKED] 失锁  
+
+监控寄存器：  
+• PRBS_LOCK_STATUS  
+  - 0 = UNLOCKED（搜索中）  
+  - 1 = LOCKED（已同步）  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+
+<span class="emphasis">典型Lock时间：</span>  
+• PRBS7:  < 1 μs  
+• PRBS15: < 10 μs  
+• PRBS31: < 100 ms  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">4</span>  
+                        <strong>误码统计</strong>  
+                        <div class="prbs-pattern">  
+每个时钟周期：  
+┌─────────────────────────────────────┐  
+│  接收数据 XOR 本地PRBS → 错误位     │  
+│      ↓                              │  
+│  累计ERROR_BIT_COUNT                │  
+│  累计TOTAL_BIT_COUNT                │  
+│      ↓                              │  
+│  计算实时BER                        │  
+└─────────────────────────────────────┘  
+
+关键计数器：  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+寄存器                值示例              说明  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+ERROR_BIT_COUNT       93              总错误bit数  
+TOTAL_BIT_COUNT       9.28e13         总接收bit数  
+BER_REALTIME          1.0e-12         实时BER  
+ERROR_BURST_COUNT     2               突发错误次数  
+FEC_CORRECTED_ERR     1,234           FEC纠正的错误数  
+FEC_UNCORRECTED_ERR   5               FEC无法纠正的错误  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">5</span>  
+                        <strong>结果判断</strong>  
+                        <div class="prbs-pattern">  
+判断逻辑树：  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+<span class="highlight">是否Lock？</span>  
+├─ 否 → <span class="bad">FAIL</span> - 无法同步PRBS  
+│       检查：  
+│       • AM Lock状态  
+│       • 光功率  
+│       • PRBS类型配置是否匹配  
+│  
+└─ 是 → <span class="highlight">BER是否达标？</span>  
+        ├─ BER > 1e-6 → <span class="bad">FAIL</span> - 严重误码  
+        │       根因：物理链路质量差  
+        │  
+        ├─ 1e-9 < BER ≤ 1e-6 → <span class="status-indicator warning"></span> <span class="bad">MARGINAL</span> - 边缘状态  
+        │       需要优化：均衡参数、温度控制  
+        │  
+        └─ BER ≤ 1e-12 → <span class="good">PASS</span> ✓  
+                进一步检查：  
+                • 是否有突发错误  
+                • FEC使用率  
+                • 长期稳定性  
+
+<span class="emphasis">最终报告：</span>  
+┌─────────────────────────────────────────────────────┐  
+│  测试结果：<span class="good">PASS</span> ✓                                     │  
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │  
+│  • BER：1.0e-12                                     │  
+│  • 测试时长：3600秒                                 │  
+│  • 总bit数：9.28e13                                 │  
+│  • 错误bit：93                                      │  
+│  • Lock状态：稳定（无失锁）                         │  
+│  • FEC纠错：1,234个（正常范围）                     │  
+│  • 建议：可投入生产使用                             │  
+└─────────────────────────────────────────────────────┘  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+                        </div>  
+                    </div>  
+
+                    <div class="flow-step">  
+                        <span class="step-number">6</span>  
+                        <strong>持续监控（生产环境）</strong>  
+                        <div class="prbs-pattern">  
+• 每秒读取BER寄存器  
+• 记录历史趋势  
+• 告警阈值：  
+  - BER > 1e-9：WARNING  
+  - BER > 1e-6：CRITICAL  
+  - Lock丢失：ALARM  
+• 自动生成报表  
+                        </div>  
+                    </div>  
+                </div>  
+
+                <div class="info-box" style="margin-top: 30px;">  
+                    <div class="info-box-title">🚨 异常处理流程</div>  
+                    <div class="prbs-pattern">  
+异常类型              处理步骤                          预期结果  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+<span class="bad">无法Lock</span>         1. 检查AM_LOCK状态                → AM必须先Lock  
+                    2. 验证PRBS类型配置              → TX/RX必须匹配  
+                    3. 检查信号质量（Eye Diagram）   → 眼图必须打开  
+                    4. 重启SerDes                    → 复位PHY  
+
+<span class="bad">频繁失锁</span>         1. 检查光功率稳定性              → 避免剧烈抖动  
+                    2. 温度监控                      → 保持恒温  
+                    3. 降低速率测试                  → 排除速率问题  
+                    4. 更换光模块                    → 排除硬件故障  
+
+<span class="bad">BER异常高</span>        1. 调整RX均衡参数                → 优化信号完整性  
+                    2. 调整TX预加重                  → 补偿信道损耗  
+                    3. 检查PCB走线                   → 排除反射/串扰  
+                    4. FEC能力评估                   → 确认FEC是否有效  
+
+<span class="bad">误码突发</span>         1. 记录发生时间/环境              → 寻找周期性规律  
+                    2. EMI测试                       → 排除电磁干扰  
+                    3. 电源纹波检查                  → 确保供电质量  
+                    4. 隔离邻近干扰源                → 物理隔离  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+                    </div>  
+                </div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 4: 寄存器配置 -->  
+        <div id="registers" class="tab-content">  
+            <div class="main-diagram">  
+                <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">  
+                    ⚙️ PRBS测试寄存器配置  
+                </h2>  
+
+                <div class="detail-card">  
+                    <h3>📝 发送端寄存器 (TX)</h3>  
+                    <div class="register-view">  
+                        <div class="register-row">  
+                            <div class="reg-name">PRBS_TX_CTRL</div>  
+                            <div class="reg-value">0x0000_0001</div>  
+                            <div class="reg-desc">PRBS发送控制寄存器</div>  
+                        </div>  
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">  
+                            Bit[0]: PRBS_TX_EN (1=Enable, 0=Disable)<br>  
+                            Bit[1]: PRBS_TX_INV (1=Invert, 0=Normal)<br>  
+                            Bit[2]: FORCE_ERROR (1=Insert Error, 0=Normal)<br>  
+                            Bit[6:4]: PRBS_TYPE<br>  
+                            &nbsp;&nbsp;000 = PRBS7<br>  
+                            &nbsp;&nbsp;001 = PRBS9<br>  
+                            &nbsp;&nbsp;010 = PRBS11<br>  
+                            &nbsp;&nbsp;011 = PRBS15<br>  
+                            &nbsp;&nbsp;100 = PRBS23<br>  
+                            &nbsp;&nbsp;101 = PRBS31<br>  
+                        </div>  
+
+                        <div class="register-row" style="margin-top: 20px;">  
+                            <div class="reg-name">PRBS_TX_SEED</div>  
+                            <div class="reg-value">0xFFFF_FFFF</div>  
+                            <div class="reg-desc">PRBS初始种子值（通常全1）</div>  
+                        </div>  
+
+                        <div class="register-row">  
+                            <div class="reg-name">PRBS_TX_BIT_CNT</div>  
+                            <div class="reg-value">0x0000_0000_xxxx_xxxx</div>  
+                            <div class="reg-desc">发送bit计数（只读，64-bit）</div>  
+                        </div>  
+
+                        <div class="register-row">  
+                            <div class="reg-name">AM_INSERT_CTRL</div>  
+                            <div class="reg-value">0x0000_0001</div>  
+                            <div class="reg-desc">AM插入控制（PRBS模式下仍启用）</div>  
+                        </div>  
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">  
+                            Bit[0]: AM_INSERT_EN (1=Enable)<br>  
+                            Bit[15:8]: AM_PERIOD (通常=164，每16384 Block)  
+                        </div>  
+
+                        <div class="register-row" style="margin-top: 20px;">  
+                            <div class="reg-name">FEC_TX_CTRL</div>  
+                            <div class="reg-value">0x0000_0001</div>  
+                            <div class="reg-desc">FEC编码控制</div>  
+                        </div>  
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">  
+                            Bit[0]: FEC_TX_EN<br>  
+                            &nbsp;&nbsp;1 = FEC编码PRBS数据（测试系统级BER）<br>  
+                            &nbsp;&nbsp;0 = Bypass FEC（测试原始BER）  
+                        </div>  
+                    </div>  
+
+                    <div class="prbs-pattern" style="margin-top: 20px;">  
+<span class="highlight">发送端配置示例代码：</span>  
+
+// 1. 配置PRBS类型为PRBS31  
+write_reg(PRBS_TX_CTRL, 0x00000051);  // Enable + PRBS31  
+                                      // Bit[0]=1 (EN)  
+                                      // Bit[6:4]=101 (PRBS31)  
+
+// 2. 设置种子（可选，默认即可）  
+write_reg(PRBS_TX_SEED, 0xFFFFFFFF);  
+
+// 3. 保持AM插入  
+write_reg(AM_INSERT_CTRL, 0x0000A401);  // Period=164, EN=1  
+
+// 4. 选择FEC模式  
+write_reg(FEC_TX_CTRL, 0x00000001);  // FEC Enable（系统级测试）  
+// 或  
+write_reg(FEC_TX_CTRL, 0x00000000);  // FEC Bypass（物理层测试）  
+
+// 5. 开始发送  
+// PRBS Generator自动运行，持续输出  
+                    </div>  
+                </div>  
+
+                <div class="detail-card" style="margin-top: 30px;">  
+                    <h3>📝 接收端寄存器 (RX)</h3>  
+                    <div class="register-view">  
+                        <div class="register-row">  
+                            <div class="reg-name">PRBS_RX_CTRL</div>  
+                            <div class="reg-value">0x0000_0001</div>  
+                            <div class="reg-desc">PRBS接收控制寄存器</div>  
+                        </div>  
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">  
+                            Bit[0]: PRBS_RX_EN (1=Enable)<br>  
+                            Bit[1]: PRBS_RX_INV (1=Invert)<br>  
+                            Bit[2]: ERROR_COUNT_CLR (1=Clear, Self-clear)<br>  
+                            Bit[3]: ERROR_COUNT_MODE (0=Accumulate, 1=Rate)<br>  
+                            Bit[6:4]: PRBS_TYPE (必须与TX匹配)  
+                        </div>  
+
+                                                <div class="register-row" style="margin-top: 20px;">
+                            <div class="reg-name">PRBS_RX_STATUS</div>
+                            <div class="reg-value">0x0000_0001</div>
+                            <div class="reg-desc">PRBS状态寄存器（只读）</div>
+                        </div>
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">
+                            Bit[0]: PRBS_LOCK (1=Locked, 0=Unlocked)<br>
+                            Bit[1]: AM_LOCK (1=AM已同步)<br>
+                            Bit[2]: CDR_LOCK (1=CDR已锁定)<br>
+                            Bit[3]: SIGNAL_DETECT (1=检测到信号)<br>
+                            Bit[4]: ERROR_BURST_DETECT (1=检测到突发错误)
+                        </div>
+
+                        <div class="register-row" style="margin-top: 20px;">
+                            <div class="reg-name">PRBS_ERROR_CNT_LOW</div>
+                            <div class="reg-value">0x0000_005D</div>
+                            <div class="reg-desc">错误bit计数[31:0]（93个错误）</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_ERROR_CNT_HIGH</div>
+                            <div class="reg-value">0x0000_0000</div>
+                            <div class="reg-desc">错误bit计数[63:32]</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_TOTAL_CNT_LOW</div>
+                            <div class="reg-value">0x5678_9ABC</div>
+                            <div class="reg-desc">总bit计数[31:0]</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_TOTAL_CNT_HIGH</div>
+                            <div class="reg-value">0x0000_5477</div>
+                            <div class="reg-desc">总bit计数[63:32]</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_BER</div>
+                            <div class="reg-value">0x0000_0001</div>
+                            <div class="reg-desc">实时BER（定点格式，需转换）</div>
+                        </div>
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">
+                            格式：Qm.n 定点数<br>
+                            转换：BER = reg_value × 10^(-15)<br>
+                            示例：0x0001 = 1.0e-12
+                        </div>
+
+                        <div class="register-row" style="margin-top: 20px;">
+                            <div class="reg-name">FEC_RX_CTRL</div>
+                            <div class="reg-value">0x0000_0001</div>
+                            <div class="reg-desc">FEC解码控制</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">FEC_CORRECTED_CNT</div>
+                            <div class="reg-value">0x0000_04D2</div>
+                            <div class="reg-desc">FEC纠正的错误数（1234）</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">FEC_UNCORRECTED_CNT</div>
+                            <div class="reg-value">0x0000_0005</div>
+                            <div class="reg-desc">FEC无法纠正的错误数（5）</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_LOCK_THRESHOLD</div>
+                            <div class="reg-value">0x0000_007F</div>
+                            <div class="reg-desc">Lock阈值（127 bits for PRBS7）</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_UNLOCK_THRESHOLD</div>
+                            <div class="reg-value">0x0000_0040</div>
+                            <div class="reg-desc">失锁阈值（64连续错误）</div>
+                        </div>
+                    </div>
+
+                    <div class="prbs-pattern" style="margin-top: 20px;">
+<span class="highlight">接收端配置示例代码：</span>
+
+// 1. 等待前提条件满足
+while(1) {
+    status = read_reg(PRBS_RX_STATUS);
+    if ((status & 0x0E) == 0x0E) {  // CDR+AM+SIGNAL都Lock
+        break;
+    }
+    usleep(1000);  // 等待1ms
+}
+
+// 2. 配置PRBS Checker（与TX匹配）
+write_reg(PRBS_RX_CTRL, 0x00000051);  // Enable + PRBS31
+                                      // Bit[0]=1 (EN)
+                                      // Bit[6:4]=101 (PRBS31)
+
+// 3. 配置FEC（与TX对应）
+write_reg(FEC_RX_CTRL, 0x00000001);  // FEC Enable
+
+// 4. 清除错误计数器
+write_reg(PRBS_RX_CTRL, read_reg(PRBS_RX_CTRL) | 0x04);  // Set CLR bit
+usleep(10);  // 等待清除完成
+
+// 5. 等待PRBS Lock
+uint32_t timeout = 1000;  // 1000ms超时
+while(timeout--) {
+    status = read_reg(PRBS_RX_STATUS);
+    if (status & 0x01) {  // PRBS_LOCK
+        printf("PRBS Locked!\n");
+        break;
+    }
+    usleep(1000);
+}
+if (timeout == 0) {
+    printf("ERROR: PRBS Lock timeout!\n");
+    return FAIL;
+}
+
+// 6. 开始统计（例如：1小时测试）
+sleep(3600);
+
+// 7. 读取结果
+uint64_t error_cnt = ((uint64_t)read_reg(PRBS_ERROR_CNT_HIGH) << 32) |
+                     read_reg(PRBS_ERROR_CNT_LOW);
+uint64_t total_cnt = ((uint64_t)read_reg(PRBS_TOTAL_CNT_HIGH) << 32) |
+                     read_reg(PRBS_TOTAL_CNT_LOW);
+double ber = (double)error_cnt / (double)total_cnt;
+
+printf("Test Results:\n");
+printf("  Error Bits: %llu\n", error_cnt);
+printf("  Total Bits: %llu\n", total_cnt);
+printf("  BER: %.2e\n", ber);
+
+// 8. 判断结果
+if (ber <= 1e-12) {
+    printf("PASS ✓\n");
+    return PASS;
+} else {
+    printf("FAIL ✗ (BER too high)\n");
+    return FAIL;
+}
+                    </div>
+                </div>
+
+                <div class="detail-card" style="margin-top: 30px;">
+                    <h3>🔧 调试寄存器</h3>
+                    <div class="register-view">
+                        <div class="register-row">
+                            <div class="reg-name">PRBS_DEBUG_STATUS</div>
+                            <div class="reg-value">0xXXXX_XXXX</div>
+                            <div class="reg-desc">PRBS调试状态（只读）</div>
+                        </div>
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">
+                            Bit[7:0]: SYNC_STATE (当前同步状态机状态)<br>
+                            Bit[15:8]: ERROR_PATTERN (最近8个bit的错误模式)<br>
+                            Bit[31:16]: LOCK_TIMER (Lock计时器当前值)
+                        </div>
+
+                        <div class="register-row" style="margin-top: 20px;">
+                            <div class="reg-name">PRBS_INJECT_ERROR</div>
+                            <div class="reg-value">0x0000_0000</div>
+                            <div class="reg-desc">手动注入错误（用于测试）</div>
+                        </div>
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">
+                            Bit[0]: INJECT_SINGLE_ERROR (写1注入1 bit错误)<br>
+                            Bit[1]: INJECT_BURST_ERROR (写1注入64 bits错误)<br>
+                            Bit[15:8]: INJECT_ERROR_RATE (按比例注入，1=每1M bit一个错误)
+                        </div>
+
+                        <div class="register-row" style="margin-top: 20px;">
+                            <div class="reg-name">PRBS_ERROR_LOG[0:15]</div>
+                            <div class="reg-value">Array of 16 regs</div>
+                            <div class="reg-desc">错误日志（记录最近16次错误位置）</div>
+                        </div>
+
+                        <div class="register-row">
+                            <div class="reg-name">AM_STATUS</div>
+                            <div class="reg-value">0x0000_FFFF</div>
+                            <div class="reg-desc">AM状态（每Lane一位）</div>
+                        </div>
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">
+                            Bit[i]: Lane[i] AM Lock状态<br>
+                            示例：0xFFFF = 16 Lane全部Lock
+                        </div>
+
+                        <div class="register-row" style="margin-top: 20px;">
+                            <div class="reg-name">EYE_MONITOR</div>
+                            <div class="reg-value">0x0000_XXXX</div>
+                            <div class="reg-desc">眼图监控（实时质量指标）</div>
+                        </div>
+                        <div style="padding-left: 40px; color: #ccc; font-size: 12px;">
+                            Bit[7:0]: EYE_HEIGHT (眼高，归一化)<br>
+                            Bit[15:8]: EYE_WIDTH (眼宽，UI单位)<br>
+                            建议：EYE_HEIGHT > 128, EYE_WIDTH > 0.6 UI
+                        </div>
+                    </div>
+
+                    <div class="prbs-pattern" style="margin-top: 20px;">
+<span class="highlight">调试示例：注入错误测试</span>
+
+// 场景：验证PRBS Checker能否正确检测错误
+
+// 1. 正常启动PRBS测试（按上述流程）
+// 2. 等待稳定（BER=0）
+sleep(10);
+
+// 3. 注入单个bit错误
+printf("Injecting single bit error...\n");
+write_reg(PRBS_INJECT_ERROR, 0x01);
+sleep(1);
+
+// 4. 读取错误计数
+uint32_t error_cnt_before = read_reg(PRBS_ERROR_CNT_LOW);
+// 预期：error_cnt_before == 1 ✓
+
+// 5. 注入突发错误
+printf("Injecting burst error...\n");
+write_reg(PRBS_INJECT_ERROR, 0x02);
+sleep(1);
+
+// 6. 读取错误计数
+uint32_t error_cnt_after = read_reg(PRBS_ERROR_CNT_LOW);
+// 预期：error_cnt_after == 65 (1 + 64) ✓
+
+// 7. 检查是否失锁（突发错误可能导致）
+status = read_reg(PRBS_RX_STATUS);
+if (!(status & 0x01)) {
+    printf("PRBS unlocked due to burst error (expected)\n");
+    // 等待重新Lock
+    sleep(1);
+}
+
+// 8. 恢复正常（停止注入）
+write_reg(PRBS_INJECT_ERROR, 0x00);
+                    </div>
+                </div>
+
+                <div class="info-box" style="margin-top: 30px;">
+                    <div class="info-box-title">💡 寄存器访问最佳实践</div>
+                    <div class="prbs-pattern">
+<span class="highlight">1. 读取顺序（避免数据不一致）</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 错误方式：
+error_low = read_reg(PRBS_ERROR_CNT_LOW);   // 读取时刻 T1
+// ... 中间可能有其他操作 ...
+error_high = read_reg(PRBS_ERROR_CNT_HIGH); // 读取时刻 T2
+// 问题：T1到T2之间，low可能溢出导致high+1，数据不一致
+
+// 正确方式：使用硬件快照
+write_reg(COUNTER_SNAPSHOT_CTRL, 0x01);  // 触发快照
+error_low = read_reg(PRBS_ERROR_CNT_LOW);
+error_high = read_reg(PRBS_ERROR_CNT_HIGH);
+// 保证读取的是同一时刻的值
+
+
+<span class="highlight">2. 清除计数器（避免竞争）</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 方法1：读-改-写（可能有竞争）
+reg_val = read_reg(PRBS_RX_CTRL);
+reg_val |= 0x04;  // Set CLR bit
+write_reg(PRBS_RX_CTRL, reg_val);
+
+// 方法2：直接写（推荐，原子操作）
+write_reg(PRBS_ERROR_CNT_CLR, 0x01);  // 专用清除寄存器
+
+
+<span class="highlight">3. 轮询等待（避免死循环）</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 错误方式：无限等待
+while(!(read_reg(PRBS_RX_STATUS) & 0x01));  // 可能永远卡住
+
+// 正确方式：超时机制
+uint32_t timeout = 1000;
+while(timeout-- > 0) {
+    if (read_reg(PRBS_RX_STATUS) & 0x01) break;
+    usleep(1000);
+}
+if (timeout == 0) {
+    printf("ERROR: Timeout waiting for PRBS Lock\n");
+    return ERROR;
+}
+
+
+<span class="highlight">4. 中断使用（高效率）</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 使能中断
+write_reg(PRBS_INT_EN, 0x03);  // Bit[0]=Lock, Bit[1]=Error
+
+// 中断处理
+void prbs_isr(void) {
+    uint32_t int_status = read_reg(PRBS_INT_STATUS);
+    
+    if (int_status & 0x01) {  // Lock中断
+        printf("PRBS Locked!\n");
+        sem_post(&prbs_lock_sem);
+    }
+    
+    if (int_status & 0x02) {  // Error中断（BER超阈值）
+        printf("ERROR: BER threshold exceeded!\n");
+        // 触发告警
+    }
+    
+    // 清除中断标志
+    write_reg(PRBS_INT_CLEAR, int_status);
+}
+
+
+<span class="highlight">5. 多Lane系统（并行操作）</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 对所有Lane统一配置
+for (int lane = 0; lane < 16; lane++) {
+    write_reg(LANE_SELECT, lane);  // 选择Lane
+    write_reg(PRBS_RX_CTRL, 0x51); // 配置PRBS
+}
+
+// 等待所有Lane Lock
+uint32_t all_locked = 0;
+for (int i = 0; i < 1000; i++) {
+    all_locked = read_reg(AM_STATUS) & 0xFFFF;
+    if (all_locked == 0xFFFF) break;  // 16 Lane全Lock
+    usleep(1000);
+}
+
+if (all_locked != 0xFFFF) {
+    printf("ERROR: Not all lanes locked: 0x%04X\n", all_locked);
+    // 识别哪些Lane失败
+    for (int lane = 0; lane < 16; lane++) {
+        if (!(all_locked & (1 << lane))) {
+            printf("  Lane %d: FAILED\n", lane);
+        }
+    }
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchMode(mode) {
+            const normalBtn = document.querySelector('.mode-btn.normal');
+            const prbsBtn = document.querySelector('.mode-btn.prbs');
+            
+            if (mode === 'normal') {
+                normalBtn.classList.add('active');
+                prbsBtn.classList.remove('active');
+                // 正常模式：淡化PRBS模块
+                document.querySelectorAll('.module-box.prbs').forEach(box => {
+                    box.style.opacity = '0.5';
+                    box.style.animation = 'none';
+                });
+            } else {
+                normalBtn.classList.remove('active');
+                prbsBtn.classList.add('active');
+                // PRBS模式：突出显示PRBS模块
+                document.querySelectorAll('.module-box.prbs').forEach(box => {
+                    box.style.opacity = '1';
+                    box.style.animation = 'glow 2s infinite';
+                });
+            }
+        }
+
+        function switchTab(tabName) {
+            // 隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有按钮的active状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示选中的内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 激活对应按钮
+            event.target.classList.add('active');
+        }
+
+        // 添加发光动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes glow {
+                0%, 100% {
+                    box-shadow: 0 0 20px rgba(255, 0, 128, 0.8);
+                }
+                50% {
+                    box-shadow: 0 0 40px rgba(255, 0, 128, 1);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 模块悬停提示
+        document.querySelectorAll('.module-box').forEach(box => {
+            box.addEventListener('click', function() {
+                const name = this.querySelector('.module-name').textContent;
+                const desc = this.querySelector('.module-desc').textContent;
+                alert(`模块：${name}\n\n功能：${desc}\n\n点击可查看更多详情`);
+            });
+        });
+
+        // 初始化时设置正常模式
+        window.addEventListener('load', function() {
+            switchMode('normal');
+        });
+    </script>
+</body>
+</html>						
