@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>交换芯片网络接口UP条件详解</title>  
+    <title>交换芯片网络接口UP条件详解 - 终极正确版</title>  
     <style>  
         * {  
             margin: 0;  
@@ -139,6 +139,90 @@
             color: white;  
         }  
 
+        .progress-bar {  
+            width: 100%;  
+            height: 30px;  
+            background: #ecf0f1;  
+            border-radius: 15px;  
+            overflow: hidden;  
+            margin-bottom: 30px;  
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);  
+        }  
+
+        .progress-fill {  
+            height: 100%;  
+            background: linear-gradient(90deg, #3498db, #2ecc71);  
+            width: 0%;  
+            transition: width 0.5s ease;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            color: white;  
+            font-weight: bold;  
+            font-size: 0.9em;  
+        }  
+
+        .timeline {  
+            display: flex;  
+            justify-content: space-between;  
+            margin-bottom: 30px;  
+            position: relative;  
+            padding: 20px 0;  
+            overflow-x: auto;  
+        }  
+
+        .timeline::before {  
+            content: '';  
+            position: absolute;  
+            top: 50%;  
+            left: 0;  
+            right: 0;  
+            height: 4px;  
+            background: #ecf0f1;  
+            transform: translateY(-50%);  
+            z-index: 0;  
+        }  
+
+        .timeline-item {  
+            position: relative;  
+            z-index: 1;  
+            text-align: center;  
+            flex: 1;  
+            min-width: 100px;  
+        }  
+
+        .timeline-dot {  
+            width: 40px;  
+            height: 40px;  
+            border-radius: 50%;  
+            background: #ecf0f1;  
+            margin: 0 auto 10px;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            font-weight: bold;  
+            transition: all 0.3s ease;  
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);  
+        }  
+
+        .timeline-dot.active {  
+            background: linear-gradient(135deg, #3498db, #2980b9);  
+            color: white;  
+            transform: scale(1.2);  
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.5);  
+        }  
+
+        .timeline-dot.completed {  
+            background: linear-gradient(135deg, #2ecc71, #27ae60);  
+            color: white;  
+        }  
+
+        .timeline-label {  
+            font-size: 0.85em;  
+            color: #7f8c8d;  
+            font-weight: bold;  
+        }  
+
         .layers {  
             display: grid;  
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));  
@@ -166,6 +250,11 @@
             color: #2c3e50;  
             border-bottom: 3px solid #3498db;  
             padding-bottom: 10px;  
+        }  
+
+        .layer.priority-0 .layer-title {  
+            border-bottom-color: #e74c3c;  
+            color: #c0392b;  
         }  
 
         .condition {  
@@ -265,108 +354,6 @@
             margin-top: 5px;  
         }  
 
-        .progress-bar {  
-            width: 100%;  
-            height: 30px;  
-            background: #ecf0f1;  
-            border-radius: 15px;  
-            overflow: hidden;  
-            margin-bottom: 30px;  
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);  
-        }  
-
-        .progress-fill {  
-            height: 100%;  
-            background: linear-gradient(90deg, #3498db, #2ecc71);  
-            width: 0%;  
-            transition: width 0.5s ease;  
-            display: flex;  
-            align-items: center;  
-            justify-content: center;  
-            color: white;  
-            font-weight: bold;  
-            font-size: 0.9em;  
-        }  
-
-        .timeline {  
-            display: flex;  
-            justify-content: space-between;  
-            margin-bottom: 30px;  
-            position: relative;  
-            padding: 20px 0;  
-        }  
-
-        .timeline::before {  
-            content: '';  
-            position: absolute;  
-            top: 50%;  
-            left: 0;  
-            right: 0;  
-            height: 4px;  
-            background: #ecf0f1;  
-            transform: translateY(-50%);  
-            z-index: 0;  
-        }  
-
-        .timeline-item {  
-            position: relative;  
-            z-index: 1;  
-            text-align: center;  
-            flex: 1;  
-        }  
-
-        .timeline-dot {  
-            width: 40px;  
-            height: 40px;  
-            border-radius: 50%;  
-            background: #ecf0f1;  
-            margin: 0 auto 10px;  
-            display: flex;  
-            align-items: center;  
-            justify-content: center;  
-            font-weight: bold;  
-            transition: all 0.3s ease;  
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);  
-        }  
-
-        .timeline-dot.active {  
-            background: linear-gradient(135deg, #3498db, #2980b9);  
-            color: white;  
-            transform: scale(1.2);  
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.5);  
-        }  
-
-        .timeline-dot.completed {  
-            background: linear-gradient(135deg, #2ecc71, #27ae60);  
-            color: white;  
-        }  
-
-        .timeline-label {  
-            font-size: 0.85em;  
-            color: #7f8c8d;  
-            font-weight: bold;  
-        }  
-
-        .info-panel {  
-            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);  
-            border-left: 5px solid #4caf50;  
-            padding: 20px;  
-            border-radius: 8px;  
-            margin-top: 30px;  
-        }  
-
-        .info-title {  
-            font-size: 1.2em;  
-            font-weight: bold;  
-            color: #2e7d32;  
-            margin-bottom: 10px;  
-        }  
-
-        .info-content {  
-            color: #1b5e20;  
-            line-height: 1.6;  
-        }  
-
         .stats {  
             display: grid;  
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));  
@@ -400,6 +387,46 @@
             color: #7f8c8d;  
         }  
 
+        .info-panel {  
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);  
+            border-left: 5px solid #2196f3;  
+            padding: 20px;  
+            border-radius: 8px;  
+            margin-top: 30px;  
+        }  
+
+        .info-title {  
+            font-size: 1.2em;  
+            font-weight: bold;  
+            color: #1565c0;  
+            margin-bottom: 10px;  
+        }  
+
+        .info-content {  
+            color: #0d47a1;  
+            line-height: 1.6;  
+        }  
+
+        .optional-panel {  
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);  
+            border-left: 5px solid #ff9800;  
+            padding: 20px;  
+            border-radius: 8px;  
+            margin-top: 20px;  
+        }  
+
+        .optional-title {  
+            font-size: 1.1em;  
+            font-weight: bold;  
+            color: #e65100;  
+            margin-bottom: 10px;  
+        }  
+
+        .optional-content {  
+            color: #bf360c;  
+            line-height: 1.6;  
+        }  
+
         @media (max-width: 768px) {  
             h1 {  
                 font-size: 1.8em;  
@@ -426,14 +453,14 @@
 <body>  
     <div class="container">  
         <h1>🔌 交换芯片网络接口UP条件详解</h1>  
-        <p class="subtitle">800G以太网接口链路建立完整流程</p>  
+        <p class="subtitle">800G以太网接口链路建立 - 仅包含必要条件</p>  
 
         <div class="status-display">  
             <div class="port-status">  
                 <div class="port-icon down" id="portIcon">❌</div>  
                 <div>  
                     <div class="status-text down" id="statusText">Link DOWN</div>  
-                    <div style="color: #7f8c8d; margin-top: 5px;" id="statusDetail">等待检测...</div>  
+                    <div style="color: #7f8c8d; margin-top: 5px;" id="statusDetail">等待系统初始化...</div>  
                 </div>  
             </div>  
         </div>  
@@ -444,16 +471,20 @@
 
         <div class="timeline" id="timeline">  
             <div class="timeline-item">  
+                <div class="timeline-dot">0</div>  
+                <div class="timeline-label">系统层</div>  
+            </div>  
+            <div class="timeline-item">  
                 <div class="timeline-dot">1</div>  
                 <div class="timeline-label">物理层</div>  
             </div>  
             <div class="timeline-item">  
                 <div class="timeline-dot">2</div>  
-                <div class="timeline-label">PCS层</div>  
+                <div class="timeline-label">PMA层</div>  
             </div>  
             <div class="timeline-item">  
                 <div class="timeline-dot">3</div>  
-                <div class="timeline-label">PMA层</div>  
+                <div class="timeline-label">PCS层</div>  
             </div>  
             <div class="timeline-item">  
                 <div class="timeline-dot">4</div>  
@@ -461,6 +492,10 @@
             </div>  
             <div class="timeline-item">  
                 <div class="timeline-dot">5</div>  
+                <div class="timeline-label">协议层</div>  
+            </div>  
+            <div class="timeline-item">  
+                <div class="timeline-dot">✓</div>  
                 <div class="timeline-label">完成</div>  
             </div>  
         </div>  
@@ -471,203 +506,31 @@
         </div>  
 
         <div class="layers" id="layers">  
-            <!-- 物理层 -->  
-            <div class="layer">  
-                <div class="layer-title">⚡ 1. 物理层 (Physical Layer)</div>  
+            <!-- 0. 系统层 -->  
+            <div class="layer priority-0">  
+                <div class="layer-title">🔴 0. 系统层 - 最高优先级</div>  
                 <div class="condition" data-layer="0" data-index="0">  
                     <div class="condition-icon pending">○</div>  
                     <div>  
-                        <div class="condition-text">光模块插入检测</div>  
-                        <div class="condition-detail">检测SFP/QSFP模块是否正确插入</div>  
+                        <div class="condition-text">供电稳定</div>  
+                        <div class="condition-detail">VDD 3.3V ± 5%, Power Good = 1</div>  
                     </div>  
                 </div>  
                 <div class="condition" data-layer="0" data-index="1">  
                     <div class="condition-icon pending">○</div>  
                     <div>  
-                        <div class="condition-text">光功率检测</div>  
-                        <div class="condition-detail">TX: -5dBm ~ +3dBm, RX: -14dBm ~ +3dBm</div>  
+                        <div class="condition-text">参考时钟锁定</div>  
+                        <div class="condition-detail">156.25MHz时钟稳定，PLL Lock</div>  
                     </div>  
                 </div>  
                 <div class="condition" data-layer="0" data-index="2">  
                     <div class="condition-icon pending">○</div>  
                     <div>  
-                        <div class="condition-text">激光器使能</div>  
-                        <div class="condition-detail">TX Disable = 0, Laser ON</div>  
+                        <div class="condition-text">复位释放</div>  
+                        <div class="condition-detail">Port Reset = 0，状态机开始运行</div>  
                     </div>  
                 </div>  
                 <div class="condition" data-layer="0" data-index="3">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">温度检测</div>  
-                        <div class="condition-detail">工作温度: 0°C ~ 70°C</div>  
-                    </div>  
-                </div>  
-            </div>  
-
-            <!-- PCS层 -->  
-            <div class="layer">  
-                <div class="layer-title">🔧 2. PCS层 (Physical Coding Sublayer)</div>  
-                <div class="condition" data-layer="1" data-index="0">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">Block Lock</div>  
-                        <div class="condition-detail">64/66b 或 256/257b 编码同步</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="1" data-index="1">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">AM Lock (对齐标记锁定)</div>  
-                        <div class="condition-detail">8条lane的Alignment Marker检测</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="1" data-index="2">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">Lane Deskew</div>  
-                        <div class="condition-detail">多lane对齐，skew < 20ns</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="1" data-index="3">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">BER < 阈值</div>  
-                        <div class="condition-detail">误码率 < 10⁻¹²</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="1" data-index="4">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">接收到有效IDLE</div>  
-                        <div class="condition-detail">检测到IDLE ordered sets</div>  
-                    </div>  
-                </div>  
-            </div>  
-
-            <!-- PMA层 -->  
-            <div class="layer">  
-                <div class="layer-title">📡 3. PMA层 (Physical Medium Attachment)</div>  
-                <div class="condition" data-layer="2" data-index="0">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">CDR Lock (时钟恢复)</div>  
-                        <div class="condition-detail">每条lane的CDR锁定</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="2" data-index="1">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">Signal Detect</div>  
-                        <div class="condition-detail">接收到有效光信号</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="2" data-index="2">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">SerDes Ready</div>  
-                        <div class="condition-detail">8个SerDes通道就绪</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="2" data-index="3">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">眼图质量</div>  
-                        <div class="condition-detail">眼高 > 60mV, 眼宽 > 0.4UI</div>  
-                    </div>  
-                </div>  
-            </div>  
-
-            <!-- 链路层 -->  
-            <div class="layer">  
-                <div class="layer-title">🔗 4. 链路层 (Link Layer)</div>  
-                <div class="condition" data-layer="3" data-index="0">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">FEC使能并同步</div>  
-                        <div class="condition-detail">RS-FEC (544,514) 解码正常</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="3" data-index="1">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">本地故障清除</div>  
-                        <div class="condition-detail">Local Fault = 0</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="3" data-index="2">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">远端故障清除</div>  
-                        <div class="condition-detail">Remote Fault = 0</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="3" data-index="3">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">接收正常帧</div>  
-                        <div class="condition-detail">接收到有效以太网帧</div>  
-                    </div>  
-                </div>  
-            </div>  
-
-            <!-- 协议层 -->  
-            <div class="layer">  
-                <div class="layer-title">📋 5. 协议层检查</div>  
-                <div class="condition" data-layer="4" data-index="0">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">管理接口使能</div>  
-                        <div class="condition-detail">Admin Status = UP</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="4" data-index="1">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">速率协商完成</div>  
-                        <div class="condition-detail">Auto-negotiation 或强制800G</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="4" data-index="2">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">流控配置正确</div>  
-                        <div class="condition-detail">PFC/Global Pause 配置一致</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="4" data-index="3">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">LLDP/协议正常</div>  
-                        <div class="condition-detail">邻居发现协议运行</div>  
-                    </div>  
-                </div>  
-            </div>  
-
-            <!-- 系统层 -->  
-            <div class="layer">  
-                <div class="layer-title">⚙️ 6. 系统层条件</div>  
-                <div class="condition" data-layer="5" data-index="0">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">供电正常</div>  
-                        <div class="condition-detail">VDD 3.3V ± 5%</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="5" data-index="1">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">时钟稳定</div>  
-                        <div class="condition-detail">参考时钟 156.25MHz 锁定</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="5" data-index="2">  
-                    <div class="condition-icon pending">○</div>  
-                    <div>  
-                        <div class="condition-text">复位释放</div>  
-                        <div class="condition-detail">Port Reset = 0</div>  
-                    </div>  
-                </div>  
-                <div class="condition" data-layer="5" data-index="3">  
                     <div class="condition-icon pending">○</div>  
                     <div>  
                         <div class="condition-text">固件加载完成</div>  
@@ -675,133 +538,347 @@
                     </div>  
                 </div>  
             </div>  
-        </div>  
 
-        <div class="stats">  
-            <div class="stat-card">  
-                <div class="stat-value" id="totalConditions">26</div>  
-                <div class="stat-label">总检测项</div>  
+            <!-- 1. 物理层 -->  
+            <div class="layer">  
+                <div class="layer-title">⚡ 1. 物理层</div>  
+                <div class="condition" data-layer="1" data-index="0">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">光模块插入检测</div>  
+                        <div class="condition-detail">ModPrsL = 0 (Module Present)</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="1" data-index="1">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">光功率正常</div>  
+                        <div class="condition-detail">TX: -5~+3dBm, RX: -14~+3dBm</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="1" data-index="2">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">激光器使能</div>  
+                        <div class="condition-detail">TxDisable = 0, Laser ON</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="1" data-index="3">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">温度正常</div>  
+                        <div class="condition-detail">工作温度: 0°C ~ 70°C</div>  
+                    </div>  
+                </div>  
             </div>  
-            <div class="stat-card">  
-                <div class="stat-value" id="passedConditions">0</div>  
-                <div class="stat-label">已通过</div>  
-            </div>  
-            <div class="stat-card">  
-                <div class="stat-value" id="failedConditions">0</div>  
-                <div class="stat-label">失败</div>  
-            </div>  
-            <div class="stat-card">  
-                <div class="stat-value" id="elapsedTime">0s</div>  
-                <div class="stat-label">耗时</div>  
-            </div>  
-        </div>  
 
-        <div class="info-panel">  
-            <div class="info-title">💡 关键说明</div>  
-            <div class="info-content">  
-                <p><strong>链路UP的必要条件：</strong>所有检测项必须全部通过(PASS)，任何一项失败都会导致链路无法UP。</p>  
-                <p><strong>典型UP时间：</strong>从冷启动到链路UP通常需要 2-5 秒，包括SerDes初始化、PCS同步、FEC锁定等过程。</p>  
-                <p><strong>常见失败原因：</strong></p>  
-                <ul style="margin-left: 20px; margin-top: 10px;">  
-                    <li>光模块未插入或接触不良</li>  
-                    <li>光纤连接错误或断裂</li>  
-                    <li>两端速率/FEC配置不匹配</li>  
-                    <li>SerDes均衡参数不正确</li>  
-                    <li>环境温度超出范围</li>  
-                </ul>  
+            <!-- 2. PMA层 -->  
+            <div class="layer">  
+                <div class="layer-title">📡 2. PMA层</div>  
+                <div class="condition" data-layer="2" data-index="0">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">Signal Detect</div>  
+                        <div class="condition-detail">检测到有效电信号，RX_LOS = 0</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="2" data-index="1">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">CDR Lock</div>  
+                        <div class="condition-detail">时钟数据恢复锁定，8 lanes全部锁定</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="2" data-index="2">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">SerDes Ready</div>  
+                        <div class="condition-detail">8×106.25Gbps SerDes就绪</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="2" data-index="3">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">均衡收敛</div>  
+                        <div class="condition-detail">CTLE/DFE/FFE均衡完成</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="2" data-index="4">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">眼图质量合格</div>  
+                        <div class="condition-detail">眼高 > 60mV, 眼宽 > 0.4UI</div>  
+                    </div>  
+                </div>  
             </div>  
-        </div>  
-    </div>  
 
-    <script>  
-        let isChecking = false;  
-        let currentLayer = 0;  
-        let currentCondition = 0;  
-        let startTime = 0;  
-        let timerInterval = null;  
-        let totalConditions = 26;  
-        let passedCount = 0;  
-        let failedCount = 0;  
+            <!-- 3. PCS层 -->  
+            <div class="layer">  
+                <div class="layer-title">🔧 3. PCS层</div>  
+                <div class="condition" data-layer="3" data-index="0">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">Block Lock</div>  
+                        <div class="condition-detail">256/257b编码同步</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="3" data-index="1">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">AM Lock</div>  
+                        <div class="condition-detail">Alignment Marker锁定</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="3" data-index="2">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">Lane Deskew</div>  
+                        <div class="condition-detail">8 lanes对齐，skew < 20ns</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="3" data-index="3">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">BER < 阈值</div>  
+                        <div class="condition-detail">误码率 < 10⁻¹²</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="3" data-index="4">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">接收IDLE</div>  
+                        <div class="condition-detail">检测到IDLE ordered sets</div>  
+                    </div>  
+                </div>  
+            </div>  
 
-        const layers = [  
-            { name: '物理层', conditions: 4 },  
-            { name: 'PCS层', conditions: 5 },  
-            { name: 'PMA层', conditions: 4 },  
-            { name: '链路层', conditions: 4 },  
-            { name: '协议层', conditions: 5 },  
-            { name: '系统层', conditions: 4 }  
-        ];  
+            <!-- 4. 链路层 -->  
+            <div class="layer">  
+                <div class="layer-title">🔗 4. 链路层</div>  
+                <div class="condition" data-layer="4" data-index="0">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">FEC同步</div>  
+                        <div class="condition-detail">RS-FEC (544,514) 锁定</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="4" data-index="1">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">FEC纠错正常</div>  
+                        <div class="condition-detail">可纠正错误 < 15/codeword</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="4" data-index="2">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">本地故障清除</div>  
+                        <div class="condition-detail">Local Fault = 0</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="4" data-index="3">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">远端故障清除</div>  
+                        <div class="condition-detail">Remote Fault = 0</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="4" data-index="4">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">接收正常帧</div>  
+                        <div class="condition-detail">以太网帧CRC正确</div>  
+                    </div>  
+                </div>  
+            </div>  
 
-        function startCheck() {  
-            if (isChecking) return;  
+            <!-- 5. 协议层 - 仅必要条件 -->  
+            <div class="layer">  
+                <div class="layer-title">📋 5. 协议层</div>  
+                <div class="condition" data-layer="5" data-index="0">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">Admin Status = UP</div>  
+                        <div class="condition-detail">ifAdminStatus = 1（管理员使能）</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="5" data-index="1">  
+                    <div class="condition-icon pending">○</div>  
+                    <div>  
+                        <div class="condition-text">速率匹配</div>  
+                        <div class="condition-detail">两端都是800G（或协商一致）</div>  
+                    </div>  
+                </div>  
+                <div class="condition" data-layer="5" data-index="2">  
+                    <div class="condition-icon pending">○</div>  
+                                        <div>
+                        <div class="condition-text">FEC类型匹配</div>
+                        <div class="condition-detail">两端FEC类型一致（RS-FEC）</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalConditions">24</div>
+                <div class="stat-label">总检测项</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="passedConditions">0</div>
+                <div class="stat-label">已通过</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="failedConditions">0</div>
+                <div class="stat-label">失败</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="elapsedTime">0s</div>
+                <div class="stat-label">耗时</div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-title">✅ 必要条件说明</div>
+            <div class="info-content">
+                <p><strong>这些是Link UP的必要条件，任何一项失败都会导致链路DOWN：</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li><strong>系统层：</strong>供电、时钟、复位释放、固件 - 芯片能工作的前提</li>
+                    <li><strong>物理层：</strong>光模块、光功率、激光器 - 有物理信号</li>
+                    <li><strong>PMA层：</strong>CDR Lock、SerDes Ready - 能恢复数字信号</li>
+                    <li><strong>PCS层：</strong>Block Lock、AM Lock、Deskew - 编码层同步</li>
+                    <li><strong>链路层：</strong>FEC同步、故障清除 - 链路健康</li>
+                    <li><strong>协议层：</strong>Admin UP、速率匹配、FEC类型匹配 - 配置一致</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="optional-panel">
+            <div class="optional-title">🟡 可选配置项（不影响Link UP）</div>
+            <div class="optional-content">
+                <p><strong>以下配置不一致也能UP，只影响功能或性能：</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li><strong>流控配置：</strong>PFC/Pause不匹配 → 链路UP，但流控失效</li>
+                    <li><strong>MTU大小：</strong>不匹配 → 链路UP，大包可能被丢弃</li>
+                    <li><strong>VLAN配置：</strong>不同 → 链路UP，数据转发逻辑不同</li>
+                    <li><strong>QoS策略：</strong>不同 → 链路UP，队列优先级不同</li>
+                    <li><strong>LLDP协议：</strong>不使能 → 链路UP，只是无法发现邻居</li>
+                    <li><strong>Storm Control：</strong>不同 → 链路UP，广播抑制策略不同</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>示例：</strong></p>
+                <div style="background: #fff; padding: 10px; border-radius: 5px; margin-top: 5px; font-family: monospace; font-size: 0.9em;">
+                    端口A: PFC使能, MTU 9216<br>
+                    端口B: PFC关闭, MTU 1500<br>
+                    <span style="color: #27ae60;">结果: Link UP ✓</span><br>
+                    影响: A发PFC帧B会忽略，A发9000字节包B会丢弃
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel" style="background: linear-gradient(135deg, #fce4ec, #f8bbd0); border-left-color: #e91e63; margin-top: 20px;">
+            <div class="info-title" style="color: #880e4f;">⚠️ 常见误区</div>
+            <div class="info-content" style="color: #4a148c;">
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li><strong>误区1：</strong>流控配置必须一致 <span style="color: #e91e63;">❌</span> → <strong>正确：</strong>不一致也能UP ✓</li>
+                    <li><strong>误区2：</strong>系统层在最后检查 <span style="color: #e91e63;">❌</span> → <strong>正确：</strong>必须最先完成 ✓</li>
+                    <li><strong>误区3：</strong>PCS可以在PMA之前 <span style="color: #e91e63;">❌</span> → <strong>正确：</strong>PMA提供bit stream给PCS ✓</li>
+                    <li><strong>误区4：</strong>复位可以一直保持 <span style="color: #e91e63;">❌</span> → <strong>正确：</strong>必须释放才能工作 ✓</li>
+                    <li><strong>误区5：</strong>有光就能UP <span style="color: #e91e63;">❌</span> → <strong>正确：</strong>还需要24项其他条件 ✓</li>
+                </ul>
+            </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 30px; color: #7f8c8d;">
+            <strong>⌨️ 快捷键：</strong> Enter/Space 开始检测 | Esc/R 重置
+        </p>
+    </div>
+
+    <script>
+        let isChecking = false;
+        let currentLayer = 0;
+        let currentCondition = 0;
+        let startTime = 0;
+        let timerInterval = null;
+        let totalConditions = 24;
+        let passedCount = 0;
+        let failedCount = 0;
+
+        // 正确的层级顺序（仅包含必要条件）
+        const layers = [
+            { name: '系统层', conditions: 4, critical: true },
+            { name: '物理层', conditions: 4 },
+            { name: 'PMA层', conditions: 5 },
+            { name: 'PCS层', conditions: 5 },
+            { name: '链路层', conditions: 5 },
+            { name: '协议层', conditions: 3 }  // 移除流控，只剩3项
+        ];
+
+        function startCheck() {
+            if (isChecking) return;
             
-            resetCheck();  
-            isChecking = true;  
-            startTime = Date.now();  
+            resetCheck();
+            isChecking = true;
+            startTime = Date.now();
             
-            // 启动计时器  
-            timerInterval = setInterval(updateTimer, 100);  
+            document.getElementById('statusDetail').textContent = '正在进行系统初始化...';
             
-            // 开始检测  
-            checkNextCondition();  
-        }  
-
-        function updateTimer() {  
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);  
-            document.getElementById('elapsedTime').textContent = elapsed + 's';  
-        }  
-
-        function checkNextCondition() {  
-            if (!isChecking) return;  
+            timerInterval = setInterval(updateTimer, 100);
             
-            if (currentLayer >= layers.length) {  
-                // 所有检测完成  
-                completeCheck(true);  
-                return;  
-            }  
+            checkNextCondition();
+        }
 
-            const layer = layers[currentLayer];  
-            if (currentCondition >= layer.conditions) {  
-                // 当前层完成，进入下一层  
-                updateTimelineDot(currentLayer, 'completed');  
-                currentLayer++;  
-                currentCondition = 0;  
+        function updateTimer() {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            document.getElementById('elapsedTime').textContent = elapsed + 's';
+        }
+
+        function checkNextCondition() {
+            if (!isChecking) return;
+            
+            if (currentLayer >= layers.length) {
+                completeCheck(true);
+                return;
+            }
+
+            const layer = layers[currentLayer];
+            if (currentCondition >= layer.conditions) {
+                updateTimelineDot(currentLayer, 'completed');
+                currentLayer++;
+                currentCondition = 0;
                 
-                if (currentLayer < layers.length) {  
-                    updateTimelineDot(currentLayer, 'active');  
-                    setTimeout(checkNextCondition, 300);  
-                } else {  
-                    completeCheck(true);  
-                }  
-                return;  
-            }  
+                if (currentLayer < layers.length) {
+                    updateTimelineDot(currentLayer, 'active');
+                    updateStatusDetail();
+                    setTimeout(checkNextCondition, 300);
+                } else {
+                    completeCheck(true);
+                }
+                return;
+            }
 
-            // 检查当前条件  
-            const conditionElement = document.querySelector(  
-                `.condition[data-layer="${currentLayer}"][data-index="${currentCondition}"]`  
-            );  
+            const conditionElement = document.querySelector(
+                `.condition[data-layer="${currentLayer}"][data-index="${currentCondition}"]`
+            );
             
-            if (conditionElement) {  
-                // 设置为检测中  
-                conditionElement.classList.add('checking');  
-                const icon = conditionElement.querySelector('.condition-icon');  
-                icon.classList.remove('pending');  
-                icon.classList.add('checking');  
-                icon.textContent = '⟳';  
+            if (conditionElement) {
+                conditionElement.classList.add('checking');
+                const icon = conditionElement.querySelector('.condition-icon');
+                icon.classList.remove('pending');
+                icon.classList.add('checking');
+                icon.textContent = '⟳';
 
-                // 更新timeline  
-                updateTimelineDot(currentLayer, 'active');  
+                updateTimelineDot(currentLayer, 'active');
 
-                // 模拟检测（90%成功率）  
-                setTimeout(() => {  
-                    const success = Math.random() > 0.05; // 95%成功率  
+                const checkTime = currentLayer === 0 ? 600 : 800;
+                setTimeout(() => {
+                    const success = Math.random() > 0.05;
                     
-                    conditionElement.classList.remove('checking');  
-                    if (success) {  
-                        conditionElement.classList.add('passed');  
-                        icon.classList.remove('checking');  
-                        icon.classList.add('passed');  
-                                                icon.textContent = '✓';
+                    conditionElement.classList.remove('checking');
+                    if (success) {
+                        conditionElement.classList.add('passed');
+                        icon.classList.remove('checking');
+                        icon.classList.add('passed');
+                        icon.textContent = '✓';
                         passedCount++;
                     } else {
                         conditionElement.classList.add('failed');
@@ -810,21 +887,31 @@
                         icon.textContent = '✗';
                         failedCount++;
                         
-                        // 如果失败，停止检测
                         completeCheck(false);
                         return;
                     }
                     
-                    // 更新统计
                     updateStats();
-                    
-                    // 更新进度
                     updateProgress();
                     
-                    // 检查下一项
                     currentCondition++;
                     setTimeout(checkNextCondition, 500);
-                }, 800);
+                }, checkTime);
+            }
+        }
+
+        function updateStatusDetail() {
+            const statusDetail = document.getElementById('statusDetail');
+            const messages = [
+                '系统初始化中...',
+                '检测光模块...',
+                'PMA层SerDes锁定中...',
+                'PCS层同步中...',
+                '链路层FEC处理...',
+                '协议层配置检查...'
+            ];
+            if (currentLayer < messages.length) {
+                statusDetail.textContent = messages[currentLayer];
             }
         }
 
@@ -865,7 +952,6 @@
             const statusDetail = document.getElementById('statusDetail');
             
             if (success) {
-                // 链路UP
                 portIcon.classList.remove('down');
                 portIcon.classList.add('up');
                 portIcon.textContent = '✓';
@@ -874,20 +960,17 @@
                 statusText.classList.add('up');
                 statusText.textContent = 'Link UP';
                 
-                statusDetail.textContent = '所有检测项通过，链路已建立';
+                statusDetail.textContent = '所有必要条件通过，链路已建立！';
                 statusDetail.style.color = '#27ae60';
                 
-                // 完成最后一个timeline
                 updateTimelineDot(layers.length - 1, 'completed');
+                updateTimelineDot(layers.length, 'completed');
                 
-                // 庆祝动画
                 celebrateSuccess();
             } else {
-                // 链路DOWN
-                statusDetail.textContent = '检测失败，链路无法建立';
+                statusDetail.textContent = `必要条件检测失败于 ${layers[currentLayer].name}，链路无法建立`;
                 statusDetail.style.color = '#e74c3c';
                 
-                // 显示失败提示
                 showFailureMessage();
             }
             
@@ -895,8 +978,6 @@
         }
 
         function celebrateSuccess() {
-            // 创建庆祝特效
-            const container = document.querySelector('.container');
             for (let i = 0; i < 50; i++) {
                 setTimeout(() => {
                     createConfetti();
@@ -935,7 +1016,6 @@
             if (failedElement) {
                 failedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
-                // 闪烁效果
                 let blinks = 0;
                 const blinkInterval = setInterval(() => {
                     failedElement.style.opacity = failedElement.style.opacity === '0.3' ? '1' : '0.3';
@@ -957,7 +1037,6 @@
             
             clearInterval(timerInterval);
             
-            // 重置所有条件
             const conditions = document.querySelectorAll('.condition');
             conditions.forEach(condition => {
                 condition.classList.remove('checking', 'passed', 'failed');
@@ -967,14 +1046,16 @@
                 icon.textContent = '○';
             });
             
-            // 重置timeline
             const dots = document.querySelectorAll('.timeline-dot');
             dots.forEach((dot, index) => {
                 dot.classList.remove('active', 'completed');
-                dot.textContent = (index + 1);
+                if (index < layers.length) {
+                    dot.textContent = index;
+                } else {
+                    dot.textContent = '✓';
+                }
             });
             
-            // 重置状态显示
             const portIcon = document.getElementById('portIcon');
             const statusText = document.getElementById('statusText');
             const statusDetail = document.getElementById('statusDetail');
@@ -987,21 +1068,18 @@
             statusText.classList.add('down');
             statusText.textContent = 'Link DOWN';
             
-            statusDetail.textContent = '等待检测...';
+            statusDetail.textContent = '等待系统初始化...';
             statusDetail.style.color = '#7f8c8d';
             
-            // 重置进度条
             const progressBar = document.getElementById('progressBar');
             progressBar.style.width = '0%';
             progressBar.textContent = '0%';
             
-            // 重置统计
             document.getElementById('passedConditions').textContent = '0';
             document.getElementById('failedConditions').textContent = '0';
             document.getElementById('elapsedTime').textContent = '0s';
         }
 
-        // 页面加载时的初始动画
         window.addEventListener('load', () => {
             const layers = document.querySelectorAll('.layer');
             layers.forEach((layer, index) => {
@@ -1015,26 +1093,16 @@
             });
         });
 
-        // 添加键盘快捷键
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 if (!isChecking) {
                     startCheck();
                 }
-            } else if (e.key === 'Escape' || e.key === 'r') {
+            } else if (e.key === 'Escape' || e.key === 'r' || e.key === 'R') {
                 resetCheck();
             }
         });
-
-        // 添加提示信息
-        const infoPanel = document.querySelector('.info-panel');
-        const keyboardHint = document.createElement('p');
-        keyboardHint.style.marginTop = '15px';
-        keyboardHint.style.fontSize = '0.9em';
-        keyboardHint.style.color = '#2e7d32';
-        keyboardHint.innerHTML = '<strong>⌨️ 键盘快捷键：</strong> Enter/Space 开始检测 | Esc/R 重置';
-        infoPanel.appendChild(keyboardHint);
     </script>
 </body>
 </html>
