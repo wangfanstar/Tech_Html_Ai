@@ -1,0 +1,50 @@
+
+
+        
+你说得对！HTML中的换行需要特殊处理。这里有几个解决方案：
+
+🔧 解决方案
+方案1：添加  white-space: pre-wrap （推荐）
+.code-block {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    margin: 15px 0;
+    line-height: 1.8;
+    border-left: 4px solid #4facfe;
+    white-space: pre-wrap;  /* ← 添加这行 */
+    word-wrap: break-word;   /* ← 防止长单词溢出 */
+}
+
+效果：
+✅ 保留空格和换行符
+✅ 自动换行（不会溢出容器）
+✅ 最接近代码块的显示效果
+
+
+在你的所有  .code-block  CSS中添加：
+.code-block {
+    /* 原有样式 */
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    margin: 15px 0;
+    line-height: 1.8;
+    border-left: 4px solid #4facfe;
+    
+    /* 添加以下三行 */
+    white-space: pre-wrap;   /* ← 关键！保留换行 */
+    word-wrap: break-word;   /* ← 防止溢出 */
+    overflow-x: auto;        /* ← 允许滚动 */
+}
+
+这样所有代码块就能正常显示换行了！🎉
+
+
+		
+		
+		
