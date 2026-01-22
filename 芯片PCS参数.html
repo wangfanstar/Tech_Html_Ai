@@ -1,0 +1,1583 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>PCS层参数详解 - 交互式可视化</title>  
+    <style>  
+        * {  
+            margin: 0;  
+            padding: 0;  
+            box-sizing: border-box;  
+        }  
+
+        body {  
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;  
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);  
+            padding: 20px;  
+            min-height: 100vh;  
+            color: #333;  
+        }  
+
+        .container {  
+            max-width: 1600px;  
+            margin: 0 auto;  
+            background: rgba(255, 255, 255, 0.98);  
+            border-radius: 20px;  
+            padding: 30px;  
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);  
+        }  
+
+        h1 {  
+            text-align: center;  
+            color: #1e3c72;  
+            margin-bottom: 10px;  
+            font-size: 2.5em;  
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);  
+        }  
+
+        .subtitle {  
+            text-align: center;  
+            color: #7f8c8d;  
+            margin-bottom: 30px;  
+            font-size: 1.1em;  
+        }  
+
+        .nav-tabs {  
+            display: flex;  
+            justify-content: center;  
+            gap: 10px;  
+            margin-bottom: 30px;  
+            flex-wrap: wrap;  
+        }  
+
+        .tab-btn {  
+            padding: 12px 24px;  
+            background: #ecf0f1;  
+            border: none;  
+            border-radius: 8px;  
+            cursor: pointer;  
+            font-weight: bold;  
+            font-size: 0.95em;  
+            transition: all 0.3s ease;  
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);  
+        }  
+
+        .tab-btn:hover {  
+            background: #bdc3c7;  
+            transform: translateY(-2px);  
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);  
+        }  
+
+        .tab-btn.active {  
+            background: linear-gradient(135deg, #3498db, #2980b9);  
+            color: white;  
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);  
+        }  
+
+        .tab-content {  
+            display: none;  
+        }  
+
+        .tab-content.active {  
+            display: block;  
+            animation: fadeIn 0.5s ease;  
+        }  
+
+        @keyframes fadeIn {  
+            from { opacity: 0; transform: translateY(10px); }  
+            to { opacity: 1; transform: translateY(0); }  
+        }  
+
+        .section {  
+            background: white;  
+            border-radius: 12px;  
+            padding: 25px;  
+            margin-bottom: 25px;  
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);  
+        }  
+
+        .section-title {  
+            font-size: 1.5em;  
+            color: #2c3e50;  
+            margin-bottom: 20px;  
+            padding-bottom: 10px;  
+            border-bottom: 3px solid #3498db;  
+            display: flex;  
+            align-items: center;  
+            gap: 10px;  
+        }  
+
+        .controls {  
+            display: flex;  
+            gap: 15px;  
+            margin-bottom: 20px;  
+            flex-wrap: wrap;  
+            justify-content: center;  
+        }  
+
+        .btn {  
+            padding: 10px 20px;  
+            border: none;  
+            border-radius: 6px;  
+            font-weight: bold;  
+            cursor: pointer;  
+            transition: all 0.3s ease;  
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);  
+        }  
+
+        .btn-primary {  
+            background: linear-gradient(135deg, #3498db, #2980b9);  
+            color: white;  
+        }  
+
+        .btn-success {  
+            background: linear-gradient(135deg, #2ecc71, #27ae60);  
+            color: white;  
+        }  
+
+        .btn-warning {  
+            background: linear-gradient(135deg, #f39c12, #e67e22);  
+            color: white;  
+        }  
+
+        .btn-danger {  
+            background: linear-gradient(135deg, #e74c3c, #c0392b);  
+            color: white;  
+        }  
+
+        .btn:hover {  
+            transform: translateY(-2px);  
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);  
+        }  
+
+        .btn:active {  
+            transform: translateY(0);  
+        }  
+
+        .visualization {  
+            background: #2c3e50;  
+            border-radius: 8px;  
+            padding: 20px;  
+            min-height: 300px;  
+            position: relative;  
+            overflow: hidden;  
+            font-family: 'Courier New', monospace;  
+            color: #00ff00;  
+        }  
+
+        .bit-stream {  
+            display: flex;  
+            gap: 2px;  
+            flex-wrap: wrap;  
+            margin-bottom: 15px;  
+            font-size: 14px;  
+        }  
+
+        .bit {  
+            width: 30px;  
+            height: 30px;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            border-radius: 4px;  
+            font-weight: bold;  
+            transition: all 0.3s ease;  
+        }  
+
+        .bit.sync-header {  
+            background: #e74c3c;  
+            color: white;  
+            border: 2px solid #c0392b;  
+        }  
+
+        .bit.data {  
+            background: #3498db;  
+            color: white;  
+        }  
+
+        .bit.am-marker {  
+            background: #f39c12;  
+            color: white;  
+            border: 2px solid #e67e22;  
+            animation: pulse 1s infinite;  
+        }  
+
+        .bit.idle {  
+            background: #95a5a6;  
+            color: white;  
+        }  
+
+        .bit.error {  
+            background: #e74c3c;  
+            animation: shake 0.5s;  
+        }  
+
+        @keyframes pulse {  
+            0%, 100% { transform: scale(1); }  
+            50% { transform: scale(1.2); }  
+        }  
+
+        @keyframes shake {  
+            0%, 100% { transform: translateX(0); }  
+            25% { transform: translateX(-5px); }  
+            75% { transform: translateX(5px); }  
+        }  
+
+        .status-panel {  
+            background: #ecf0f1;  
+            border-radius: 8px;  
+            padding: 15px;  
+            margin-top: 20px;  
+        }  
+
+        .status-item {  
+            display: flex;  
+            justify-content: space-between;  
+            padding: 10px;  
+            margin: 5px 0;  
+            background: white;  
+            border-radius: 6px;  
+            border-left: 4px solid #3498db;  
+        }  
+
+        .status-item.success {  
+            border-left-color: #2ecc71;  
+        }  
+
+        .status-item.warning {  
+            border-left-color: #f39c12;  
+        }  
+
+        .status-item.error {  
+            border-left-color: #e74c3c;  
+        }  
+
+        .status-label {  
+            font-weight: bold;  
+            color: #2c3e50;  
+        }  
+
+        .status-value {  
+            font-family: 'Courier New', monospace;  
+            color: #7f8c8d;  
+        }  
+
+        .lane-display {  
+            display: grid;  
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));  
+            gap: 15px;  
+            margin-top: 20px;  
+        }  
+
+        .lane-card {  
+            background: white;  
+            border-radius: 8px;  
+            padding: 15px;  
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);  
+            text-align: center;  
+            transition: all 0.3s ease;  
+        }  
+
+        .lane-card:hover {  
+            transform: translateY(-5px);  
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);  
+        }  
+
+        .lane-number {  
+            font-size: 1.5em;  
+            font-weight: bold;  
+            color: #3498db;  
+            margin-bottom: 10px;  
+        }  
+
+        .lane-status {  
+            padding: 8px;  
+            border-radius: 6px;  
+            margin: 5px 0;  
+            font-size: 0.9em;  
+        }  
+
+        .lane-status.locked {  
+            background: #d4edda;  
+            color: #155724;  
+            border: 1px solid #c3e6cb;  
+        }  
+
+        .lane-status.unlocked {  
+            background: #f8d7da;  
+            color: #721c24;  
+            border: 1px solid #f5c6cb;  
+        }  
+
+        .wave-canvas {  
+            width: 100%;  
+            height: 200px;  
+            background: #1a1a1a;  
+            border-radius: 8px;  
+            margin: 15px 0;  
+        }  
+
+        .chart-container {  
+            position: relative;  
+            height: 300px;  
+            margin: 20px 0;  
+        }  
+
+        .info-box {  
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);  
+            border-left: 5px solid #2196f3;  
+            padding: 15px;  
+            border-radius: 6px;  
+            margin: 15px 0;  
+        }  
+
+        .info-box h4 {  
+            color: #1565c0;  
+            margin-bottom: 10px;  
+        }  
+
+        .info-box p {  
+            color: #0d47a1;  
+            line-height: 1.6;  
+        }  
+
+        .code-block {  
+            background: #2c3e50;  
+            color: #00ff00;  
+            padding: 15px;  
+            border-radius: 6px;  
+            font-family: 'Courier New', monospace;  
+            overflow-x: auto;  
+            margin: 15px 0;  
+            white-space: pre-wrap;  /* 关键：保持换行 */  
+            word-wrap: break-word;  /* 长单词换行 */  
+            line-height: 1.6;       /* 行高 */  
+        }  
+
+        /* AM Pattern 特殊样式 */  
+        .am-pattern-display {  
+            background: #2c3e50;  
+            color: #00ff00;  
+            padding: 20px;  
+            border-radius: 8px;  
+            font-family: 'Courier New', monospace;  
+            font-size: 13px;  
+            line-height: 2;  
+            overflow-x: auto;  
+            margin: 15px 0;  
+        }  
+
+        .am-pattern-line {  
+            display: block;  
+            padding: 5px 0;  
+            border-left: 3px solid transparent;  
+            padding-left: 10px;  
+            transition: all 0.3s ease;  
+        }  
+
+        .am-pattern-line:hover {  
+            background: rgba(52, 152, 219, 0.2);  
+            border-left-color: #3498db;  
+        }  
+
+        .lane-label {  
+            color: #3498db;  
+            font-weight: bold;  
+        }  
+
+        .pattern-value {  
+            color: #2ecc71;  
+        }  
+
+        .pattern-inverse {  
+            color: #f39c12;  
+        }  
+
+        .legend {  
+            display: flex;  
+            gap: 20px;  
+            flex-wrap: wrap;  
+            margin: 15px 0;  
+            padding: 15px;  
+            background: #ecf0f1;  
+            border-radius: 6px;  
+        }  
+
+        .legend-item {  
+            display: flex;  
+            align-items: center;  
+            gap: 8px;  
+        }  
+
+        .legend-color {  
+            width: 20px;  
+            height: 20px;  
+            border-radius: 4px;  
+        }  
+
+        .progress-bar {  
+            width: 100%;  
+            height: 30px;  
+            background: #ecf0f1;  
+            border-radius: 15px;  
+            overflow: hidden;  
+            margin: 15px 0;  
+        }  
+
+        .progress-fill {  
+            height: 100%;  
+            background: linear-gradient(90deg, #3498db, #2ecc71);  
+            transition: width 0.5s ease;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            color: white;  
+            font-weight: bold;  
+        }  
+
+        @media (max-width: 768px) {  
+            h1 {  
+                font-size: 1.8em;  
+            }  
+            
+            .lane-display {  
+                grid-template-columns: 1fr;  
+            }  
+            
+            .nav-tabs {  
+                flex-direction: column;  
+            }  
+            
+            .tab-btn {  
+                width: 100%;  
+            }  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h1>🔧 PCS层参数详解</h1>  
+        <p class="subtitle">Physical Coding Sublayer - 交互式可视化演示</p>  
+
+        <div class="nav-tabs">  
+            <button class="tab-btn active" onclick="switchTab('block-lock')">1. Block Lock</button>  
+            <button class="tab-btn" onclick="switchTab('am-lock')">2. AM Lock</button>  
+            <button class="tab-btn" onclick="switchTab('deskew')">3. Lane Deskew</button>  
+            <button class="tab-btn" onclick="switchTab('ber')">4. BER监控</button>  
+            <button class="tab-btn" onclick="switchTab('idle')">5. IDLE检测</button>  
+        </div>  
+
+        <!-- Tab 1: Block Lock -->  
+        <div id="block-lock" class="tab-content active">  
+            <div class="section">  
+                <div class="section-title">  
+                    <span>🔐</span>  
+                    <span>Block Lock (块同步)</span>  
+                </div>  
+
+                <div class="info-box">  
+                    <h4>📚 原理说明</h4>  
+                    <p>PCS层使用256b/257b编码：每256 bits数据前加1 bit同步头(Sync Header)。  
+                    Block Lock就是识别并锁定这些同步头的过程。</p>  
+                    <p><strong>Sync Header规则：</strong> 0 = 数据块, 1 = 控制块</p>  
+                </div>  
+
+                <div class="controls">  
+                    <button class="btn btn-primary" onclick="startBlockLock()">🚀 开始检测</button>  
+                    <button class="btn btn-warning" onclick="injectError('block')">⚠️ 注入错误</button>  
+                    <button class="btn btn-danger" onclick="resetBlockLock()">🔄 重置</button>  
+                </div>  
+
+                <div class="visualization" id="blockLockViz">  
+                    <div style="color: #00ff00; margin-bottom: 10px;">正在等待启动...</div>  
+                </div>  
+
+                <div class="legend">  
+                    <div class="legend-item">  
+                        <div class="legend-color" style="background: #e74c3c;"></div>  
+                        <span>Sync Header (0或1)</span>  
+                    </div>  
+                    <div class="legend-item">  
+                        <div class="legend-color" style="background: #3498db;"></div>  
+                        <span>Data Block (256 bits)</span>  
+                    </div>  
+                    <div class="legend-item">  
+                        <div class="legend-color" style="background: #f39c12;"></div>  
+                        <span>Control Block (256 bits)</span>  
+                    </div>  
+                </div>  
+
+                <div class="status-panel" id="blockLockStatus">  
+                    <div class="status-item">  
+                        <span class="status-label">检测状态:</span>  
+                        <span class="status-value" id="blockLockState">LOCK_INIT</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">连续正确计数:</span>  
+                        <span class="status-value" id="blockCorrectCount">0 / 64</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">错误计数:</span>  
+                        <span class="status-value" id="blockErrorCount">0</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">锁定状态:</span>  
+                        <span class="status-value" id="blockLockResult">未锁定</span>  
+                    </div>  
+                </div>  
+
+                <div class="code-block">// Block Lock 状态机  
+[LOCK_INIT] 初始状态  
+    ↓ 检测sync header  
+[LOCK_ACQUIRED] 找到sync pattern  
+    ↓ 连续64个正确  
+[LOCK_VALID] ✓ 锁定成功  
+    ↓ 连续64个错误  
+[LOCK_LOST] ✗ 失去锁定</div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 2: AM Lock -->  
+        <div id="am-lock" class="tab-content">  
+            <div class="section">  
+                <div class="section-title">  
+                    <span>📍</span>  
+                    <span>AM Lock (对齐标记锁定)</span>  
+                </div>  
+
+                <div class="info-box">  
+                    <h4>📚 原理说明</h4>  
+                    <p>Alignment Marker (AM) 是周期性插入的特殊标记，用于lane对齐。</p>  
+                    <p><strong>插入周期：</strong>每16383个block插入1个AM (约40μs)</p>  
+                    <p><strong>AM模式：</strong>每条lane有唯一的pattern，用于识别和同步</p>  
+                </div>  
+
+                <div class="controls">  
+                    <button class="btn btn-primary" onclick="startAMLock()">🚀 开始检测AM</button>  
+                    <button class="btn btn-success" onclick="showAMPattern()">📋 显示AM模式</button>  
+                    <button class="btn btn-warning" onclick="injectError('am')">⚠️ AM缺失</button>  
+                    <button class="btn btn-danger" onclick="resetAMLock()">🔄 重置</button>  
+                </div>  
+
+                <div class="visualization" id="amLockViz">  
+                    <div style="color: #00ff00;">AM检测可视化区域</div>  
+                </div>  
+
+                <div class="status-panel" id="amLockStatus">  
+                    <div class="status-item">  
+                        <span class="status-label">AM检测状态:</span>  
+                        <span class="status-value" id="amLockState">AM_INIT</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">检测到的AM:</span>  
+                        <span class="status-value" id="amFoundCount">0 / 4</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">下次预期位置:</span>  
+                        <span class="status-value" id="amNextPosition">Block 16383</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">AM Lock状态:</span>  
+                        <span class="status-value" id="amLockResult">未锁定</span>  
+                    </div>  
+                </div>  
+
+                <!-- 修复后的AM Pattern显示 -->  
+                <div class="am-pattern-display" id="amPatternDisplay">  
+<span style="color: #95a5a6;">// 800G AM Patterns (IEEE 802.3bs)</span>  
+
+<span class="am-pattern-line"><span class="lane-label">Lane 0:</span> <span class="pattern-value">0x90_76_47_CB</span> + inverse <span class="pattern-inverse">(0x6F_89_B8_34)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 1:</span> <span class="pattern-value">0xF0_C4_E6_1B</span> + inverse <span class="pattern-inverse">(0x0F_3B_19_E4)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 2:</span> <span class="pattern-value">0xC5_FB_65_9A</span> + inverse <span class="pattern-inverse">(0x3A_04_9A_65)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 3:</span> <span class="pattern-value">0xA2_79_3D_8C</span> + inverse <span class="pattern-inverse">(0x5D_86_C2_73)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 4:</span> <span class="pattern-value">0xE1_5A_2B_67</span> + inverse <span class="pattern-inverse">(0x1E_A5_D4_98)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 5:</span> <span class="pattern-value">0xFF_49_08_B5</span> + inverse <span class="pattern-inverse">(0x00_B6_F7_4A)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 6:</span> <span class="pattern-value">0xC8_6C_97_F3</span> + inverse <span class="pattern-inverse">(0x37_93_68_0C)</span></span>  
+<span class="am-pattern-line"><span class="lane-label">Lane 7:</span> <span class="pattern-value">0xD4_A5_F0_1C</span> + inverse <span class="pattern-inverse">(0x2B_5A_0F_E3)</span></span>  
+
+<span style="color: #95a5a6;">// 每条lane使用唯一的AM pattern进行识别  
+// AM + inverse 共256 bits，用于可靠检测</span>  
+                </div>  
+
+                <div class="progress-bar">  
+                    <div class="progress-fill" id="amProgress" style="width: 0%;">0%</div>  
+                </div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 3: Lane Deskew -->  
+        <div id="deskew" class="tab-content">  
+            <div class="section">  
+                <div class="section-title">  
+                    <span>⚖️</span>  
+                    <span>Lane Deskew (通道对齐)</span>  
+                </div>  
+
+                <div class="info-box">  
+                    <h4>📚 原理说明</h4>  
+                    <p>800G使用8条物理lane并行传输，由于走线长度差异，各lane到达时间不同。</p>  
+                    <p><strong>Skew容忍度：</strong>最大20ns</p>  
+                    <p><strong>对齐方法：</strong>使用FIFO缓冲器延迟较快的lane</p>  
+                </div>  
+
+                <div class="controls">  
+                    <button class="btn btn-primary" onclick="startDeskew()">🚀 开始对齐</button>  
+                    <button class="btn btn-success" onclick="randomizeSkew()">🎲 随机Skew</button>  
+                    <button class="btn btn-warning" onclick="setLargeSkew()">⚠️ 大Skew(>20ns)</button>  
+                    <button class="btn btn-danger" onclick="resetDeskew()">🔄 重置</button>  
+                </div>  
+
+                <div class="lane-display" id="laneDisplay">  
+                    <!-- 8个lane卡片将在这里生成 -->  
+                </div>  
+
+                <div class="visualization" id="deskewViz" style="min-height: 400px;">  
+                    <canvas id="deskewCanvas" class="wave-canvas"></canvas>  
+                </div>  
+
+                <div class="status-panel" id="deskewStatus">  
+                    <div class="status-item">  
+                        <span class="status-label">最大Skew:</span>  
+                        <span class="status-value" id="maxSkew">0 ns</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">Deskew状态:</span>  
+                        <span class="status-value" id="deskewState">未开始</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">对齐完成:</span>  
+                        <span class="status-value" id="deskewProgress">0 / 8 lanes</span>  
+                    </div>  
+                </div>  
+
+                <div class="code-block">// Deskew算法  
+Step 1: 检测每条lane的AM到达时间  
+Step 2: 找到最晚到达的lane (max_delay)  
+Step 3: 计算每条lane的FIFO延迟  
+    lane_delay[i] = max_delay - lane_arrival[i]  
+Step 4: 通过FIFO实现延迟  
+    if max_skew <= 20ns: Deskew成功 ✓  
+    else: Deskew失败 ✗</div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 4: BER Monitor -->  
+        <div id="ber" class="tab-content">  
+            <div class="section">  
+                <div class="section-title">  
+                    <span>📊</span>  
+                    <span>BER监控 (误码率检测)</span>  
+                </div>  
+
+                <div class="info-box">  
+                    <h4>📚 原理说明</h4>  
+                    <p>BER (Bit Error Rate) = 错误bits / 总bits</p>  
+                    <p><strong>要求：</strong>FEC前 BER < 10<sup>-12</sup></p>  
+                    <p><strong>检测方法：</strong>BIP-8 (Bit Interleaved Parity) 或 PRBS测试</p>  
+                </div>  
+
+                <div class="controls">  
+                    <button class="btn btn-primary" onclick="startBERMonitor()">🚀 开始监控</button>  
+                    <button class="btn btn-success" onclick="setBERLevel('good')">✓ 良好信号</button>  
+                    <button class="btn btn-warning" onclick="setBERLevel('warning')">⚠️ 警告级别</button>  
+                    <button class="btn btn-danger" onclick="setBERLevel('critical')">✗ 严重级别</button>  
+                </div>  
+
+                <div class="chart-container">  
+                    <canvas id="berChart"></canvas>  
+                </div>  
+
+                <div class="status-panel" id="berStatus">  
+                    <div class="status-item">  
+                        <span class="status-label">当前BER:</span>  
+                        <span class="status-value" id="currentBER">0</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">错误Bits (1秒):</span>  
+                        <span class="status-value" id="errorBits">0</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">总Bits (1秒):</span>  
+                        <span class="status-value" id="totalBits">8.0 × 10¹¹</span>  
+                    </div>  
+                    <div class="status-item">  
+                        <span class="status-label">BER状态:</span>  
+                        <span class="status-value" id="berState">正常</span>  
+                    </div>  
+                </div>  
+
+                <div class="code-block">// BER计算示例  
+800Gbps速率下：  
+- 每秒传输: 8 × 10^11 bits  
+- 要求BER < 10^-12  
+- 允许错误: < 800 bits/秒  
+
+BIP-8校验：  
+- 将256bits分成8组  
+- 每组计算偶校验  
+- 比对发送和接收的BIP  
+- 错误位数 = BER估算值</div>  
+
+                <div class="visualization" id="berViz" style="min-height: 200px;">  
+                    <div style="color: #00ff00; font-size: 24px; text-align: center; padding: 50px;">  
+                        实时BER曲线显示区域  
+                    </div>  
+                </div>  
+            </div>  
+        </div>  
+
+        <!-- Tab 5: IDLE Detection -->  
+        <div id="idle" class="tab-content">  
+            <div class="section">  
+                <div class="section-title">  
+                    <span>⏸️</span>  
+                    <span>IDLE检测 (空闲码检测)</span>  
+                </div>  
+
+                <div class="info-box">  
+                    <h4>📚 原理说明</h4>  
+                    <p>IDLE是PCS层在无数据时发送的特殊控制码，用于保持链路活跃。</p>  
+                    <p><strong>IDLE格式：</strong>[Sync:1][Control Type:0x1E][8 bytes data]</p>  
+                    <p><strong>作用：</strong>时钟同步、链路保活、帧间隙填充</p>  
+                </div>  
+
+                <div class="controls">  
+                    <button class="btn btn-primary" onclick="startIDLEDetection()">🚀 开始检测</button>  
+                    <button class="btn btn-success" onclick="sendDataFrames()">📤 发送数据帧</button>  
+                    <button class="btn btn-warning" onclick="sendIDLEOnly()">⏸️ 仅发送IDLE</button>  
+                    <button class="btn btn-danger" onclick="resetIDLE()">
+					🔄 重置</button>
+                </div>
+
+                <div class="visualization" id="idleViz">
+                    <div style="color: #00ff00;">等待开始IDLE检测...</div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #95a5a6;"></div>
+                        <span>IDLE Block</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db;"></div>
+                        <span>Data Block</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2ecc71;"></div>
+                        <span>Preamble/SFD</span>
+                    </div>
+                </div>
+
+                <div class="status-panel" id="idleStatus">
+                    <div class="status-item">
+                        <span class="status-label">IDLE检测:</span>
+                        <span class="status-value" id="idleDetected">未检测</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">连续IDLE数:</span>
+                        <span class="status-value" id="consecutiveIdle">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">IDLE总数 (1秒):</span>
+                        <span class="status-value" id="totalIdle">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">错误IDLE:</span>
+                        <span class="status-value" id="errorIdle">0</span>
+                    </div>
+                </div>
+
+                <div class="code-block">// IDLE格式 (256 bits)
+┌────────┬──────────────┬──────────────────┐
+│Sync: 1 │ Type: 0x1E   │ Idle Data: 0x00  │
+└────────┴──────────────┴──────────────────┘
+
+// 典型流程
+[Data Frame] → [IFG (12B IDLE)] → [Data Frame]
+无数据时：
+[IDLE][IDLE][IDLE][IDLE]...持续发送
+
+// IDLE检测条件
+- Sync header = 1 (控制块)
+- Control type = 0x1E
+- 连续接收 ≥ 16个IDLE → 检测成功</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 全局变量
+        let blockLockInterval = null;
+        let amLockInterval = null;
+        let deskewInterval = null;
+        let berInterval = null;
+        let idleInterval = null;
+
+        let blockLockData = {
+            state: 'LOCK_INIT',
+            correctCount: 0,
+            errorCount: 0,
+            locked: false,
+            currentBlock: 0
+        };
+
+        let amLockData = {
+            state: 'AM_INIT',
+            foundCount: 0,
+            blockCount: 0,
+            nextPosition: 16383,
+            locked: false
+        };
+
+        let deskewData = {
+            lanes: Array(8).fill().map((_, i) => ({
+                id: i,
+                skew: 0,
+                delay: 0,
+                locked: false,
+                arrivalTime: 0
+            })),
+            maxSkew: 0,
+            aligned: false
+        };
+
+        let berData = {
+            history: [],
+            currentBER: 0,
+            errorBits: 0,
+            totalBits: 8e11,
+            chart: null
+        };
+
+        let idleData = {
+            detected: false,
+            consecutiveCount: 0,
+            totalCount: 0,
+            errorCount: 0,
+            blocks: []
+        };
+
+        // Tab切换
+        function switchTab(tabId) {
+            // 停止所有动画
+            stopAllAnimations();
+
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 移除所有按钮active状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 显示选中的tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function stopAllAnimations() {
+            clearInterval(blockLockInterval);
+            clearInterval(amLockInterval);
+            clearInterval(deskewInterval);
+            clearInterval(berInterval);
+            clearInterval(idleInterval);
+        }
+
+        // ==================== Block Lock ====================
+        function startBlockLock() {
+            resetBlockLock();
+            blockLockData.state = 'LOCK_ACQUIRED';
+            
+            blockLockInterval = setInterval(() => {
+                generateBlockLockStream();
+                updateBlockLockStatus();
+            }, 200);
+        }
+
+        function generateBlockLockStream() {
+            const viz = document.getElementById('blockLockViz');
+            let html = '<div class="bit-stream">';
+            
+            for (let i = 0; i < 10; i++) {
+                const syncHeader = Math.random() > 0.05 ? (Math.random() > 0.5 ? 0 : 1) : 'X';
+                const isError = syncHeader === 'X';
+                
+                // Sync Header
+                html += `<div class="bit ${isError ? 'error' : 'sync-header'}" 
+                         style="font-size: 16px; width: 40px; height: 40px;">
+                         ${syncHeader}
+                         </div>`;
+                
+                // Data block (简化显示)
+                const blockType = syncHeader === 1 ? 'am-marker' : 'data';
+                html += `<div class="bit ${blockType}" 
+                         style="width: 200px; font-size: 12px;">
+                         ${syncHeader === 1 ? 'CTRL 256b' : 'DATA 256b'}
+                         </div>`;
+                
+                if (isError) {
+                    blockLockData.errorCount++;
+                    blockLockData.correctCount = 0;
+                } else {
+                    blockLockData.correctCount++;
+                }
+                
+                blockLockData.currentBlock++;
+            }
+            
+            html += '</div>';
+            
+            // 显示当前block信息
+            html += `<div style="color: #00ff00; margin-top: 15px;">
+                     当前Block: ${blockLockData.currentBlock}<br>
+                     状态: ${blockLockData.state}<br>
+                     ${blockLockData.locked ? '✓ Block Lock 成功!' : '检测中...'}
+                     </div>`;
+            
+            viz.innerHTML = html;
+            
+            // 检查是否锁定
+            if (blockLockData.correctCount >= 64 && !blockLockData.locked) {
+                blockLockData.locked = true;
+                blockLockData.state = 'LOCK_VALID';
+            }
+        }
+
+        function updateBlockLockStatus() {
+            document.getElementById('blockLockState').textContent = blockLockData.state;
+            document.getElementById('blockCorrectCount').textContent = 
+                `${blockLockData.correctCount} / 64`;
+            document.getElementById('blockErrorCount').textContent = blockLockData.errorCount;
+            document.getElementById('blockLockResult').textContent = 
+                blockLockData.locked ? '✓ 已锁定' : '未锁定';
+            
+            // 更新状态样式
+            const stateItem = document.querySelectorAll('#blockLockStatus .status-item')[3];
+            if (blockLockData.locked) {
+                stateItem.classList.remove('error');
+                stateItem.classList.add('success');
+            }
+        }
+
+        function injectError(type) {
+            if (type === 'block') {
+                blockLockData.correctCount = Math.max(0, blockLockData.correctCount - 10);
+                blockLockData.errorCount += 10;
+            } else if (type === 'am') {
+                amLockData.foundCount = 0;
+                amLockData.state = 'AM_LOST';
+            }
+        }
+
+        function resetBlockLock() {
+            clearInterval(blockLockInterval);
+            blockLockData = {
+                state: 'LOCK_INIT',
+                correctCount: 0,
+                errorCount: 0,
+                locked: false,
+                currentBlock: 0
+            };
+            document.getElementById('blockLockViz').innerHTML = 
+                '<div style="color: #00ff00; margin-bottom: 10px;">正在等待启动...</div>';
+            updateBlockLockStatus();
+        }
+
+        // ==================== AM Lock ====================
+        function startAMLock() {
+            resetAMLock();
+            amLockData.state = 'AM_SEARCHING';
+            
+            amLockInterval = setInterval(() => {
+                generateAMLockStream();
+                updateAMLockStatus();
+            }, 500);
+        }
+
+        function generateAMLockStream() {
+            const viz = document.getElementById('amLockViz');
+            let html = '<div style="color: #00ff00; margin-bottom: 15px;">';
+            html += `Block计数: ${amLockData.blockCount}<br>`;
+            html += `检测状态: ${amLockData.state}<br><br>`;
+            html += '</div>';
+            
+            html += '<div class="bit-stream">';
+            
+            // 模拟block流
+            for (let i = 0; i < 20; i++) {
+                const isAM = (amLockData.blockCount % 16383) === 0 && amLockData.blockCount > 0;
+                
+                if (isAM) {
+                    // AM marker
+                    html += `<div class="bit am-marker" 
+                             style="width: 100px; font-size: 12px;">
+                             AM[${amLockData.blockCount}]
+                             </div>`;
+                    
+                    // 检测到AM
+                    if (Math.random() > 0.1) { // 90%正确率
+                        amLockData.foundCount++;
+                        if (amLockData.foundCount >= 4 && !amLockData.locked) {
+                            amLockData.locked = true;
+                            amLockData.state = 'AM_LOCKED';
+                        }
+                    } else {
+                        amLockData.foundCount = 0;
+                    }
+                } else {
+                    html += `<div class="bit data" style="width: 50px; font-size: 10px;">
+                             ${amLockData.blockCount}
+                             </div>`;
+                }
+                
+                amLockData.blockCount++;
+            }
+            
+            html += '</div>';
+            
+            if (amLockData.locked) {
+                html += `<div style="color: #2ecc71; margin-top: 20px; font-size: 18px;">
+                         ✓ AM Lock 成功! 已检测到${amLockData.foundCount}个连续AM
+                         </div>`;
+            }
+            
+            viz.innerHTML = html;
+        }
+
+        function updateAMLockStatus() {
+            document.getElementById('amLockState').textContent = amLockData.state;
+            document.getElementById('amFoundCount').textContent = 
+                `${Math.min(amLockData.foundCount, 4)} / 4`;
+            document.getElementById('amNextPosition').textContent = 
+                `Block ${amLockData.blockCount + (16383 - (amLockData.blockCount % 16383))}`;
+            document.getElementById('amLockResult').textContent = 
+                amLockData.locked ? '✓ 已锁定' : '未锁定';
+            
+            // 更新进度条
+            const progress = Math.min(100, (amLockData.foundCount / 4) * 100);
+            document.getElementById('amProgress').style.width = progress + '%';
+            document.getElementById('amProgress').textContent = Math.round(progress) + '%';
+            
+            // 更新状态样式
+            const stateItem = document.querySelectorAll('#amLockStatus .status-item')[3];
+            if (amLockData.locked) {
+                stateItem.classList.add('success');
+            }
+        }
+
+        function showAMPattern() {
+            // 滚动到AM Pattern显示区域并高亮
+            const patternDiv = document.getElementById('amPatternDisplay');
+            patternDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 闪烁效果
+            let count = 0;
+            const flashInterval = setInterval(() => {
+                patternDiv.style.boxShadow = count % 2 === 0 ? 
+                    '0 0 20px rgba(52, 152, 219, 0.8)' : 
+                    '0 0 5px rgba(52, 152, 219, 0.3)';
+                count++;
+                if (count >= 6) {
+                    clearInterval(flashInterval);
+                    patternDiv.style.boxShadow = 'none';
+                }
+            }, 200);
+        }
+
+        function resetAMLock() {
+            clearInterval(amLockInterval);
+            amLockData = {
+                state: 'AM_INIT',
+                foundCount: 0,
+                blockCount: 0,
+                nextPosition: 16383,
+                locked: false
+            };
+            document.getElementById('amLockViz').innerHTML = 
+                '<div style="color: #00ff00;">AM检测可视化区域</div>';
+            updateAMLockStatus();
+        }
+
+        // ==================== Lane Deskew ====================
+        function initLaneDisplay() {
+            const container = document.getElementById('laneDisplay');
+            let html = '';
+            
+            for (let i = 0; i < 8; i++) {
+                html += `
+                <div class="lane-card">
+                    <div class="lane-number">Lane ${i}</div>
+                    <div class="lane-status unlocked" id="lane-${i}-status">
+                        未对齐
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #34495e;">
+                        <div>Skew: <span id="lane-${i}-skew">0</span> ns</div>
+                        <div>Delay: <span id="lane-${i}-delay">0</span> ns</div>
+                        <div>到达: <span id="lane-${i}-arrival">0</span> ns</div>
+                    </div>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function startDeskew() {
+            // 随机生成skew
+            randomizeSkew();
+            
+            setTimeout(() => {
+                performDeskew();
+            }, 1000);
+        }
+
+        function randomizeSkew() {
+            const baseTime = 1000; // 基准时间 1000ns
+            
+            for (let i = 0; i < 8; i++) {
+                const skew = Math.random() * 18; // 0-18ns随机skew
+                deskewData.lanes[i].arrivalTime = baseTime + skew;
+                deskewData.lanes[i].skew = skew;
+                deskewData.lanes[i].locked = false;
+                
+                updateLaneDisplay(i);
+            }
+            
+            calculateMaxSkew();
+            drawDeskewWave();
+        }
+
+        function setLargeSkew() {
+            const baseTime = 1000;
+            
+            for (let i = 0; i < 8; i++) {
+                const skew = Math.random() * 25; // 0-25ns，超过阈值
+                deskewData.lanes[i].arrivalTime = baseTime + skew;
+                deskewData.lanes[i].skew = skew;
+                deskewData.lanes[i].locked = false;
+                
+                updateLaneDisplay(i);
+            }
+            
+            calculateMaxSkew();
+            drawDeskewWave();
+            
+            document.getElementById('deskewState').textContent = '⚠️ Skew超过20ns阈值!';
+            document.querySelectorAll('#deskewStatus .status-item')[1].classList.add('error');
+        }
+
+        function performDeskew() {
+            // 找到最晚到达的lane
+            let maxArrival = Math.max(...deskewData.lanes.map(l => l.arrivalTime));
+            
+            // 计算每条lane需要的延迟
+            deskewData.lanes.forEach((lane, i) => {
+                lane.delay = maxArrival - lane.arrivalTime;
+            });
+            
+            // 动画显示对齐过程
+            let completed = 0;
+            const interval = setInterval(() => {
+                if (completed < 8) {
+                    deskewData.lanes[completed].locked = true;
+                    updateLaneDisplay(completed);
+                    completed++;
+                    
+                    document.getElementById('deskewProgress').textContent = 
+                        `${completed} / 8 lanes`;
+                } else {
+                    clearInterval(interval);
+                    deskewData.aligned = true;
+                    document.getElementById('deskewState').textContent = '✓ 对齐成功';
+                    document.querySelectorAll('#deskewStatus .status-item')[1].classList.add('success');
+                }
+                
+                drawDeskewWave();
+            }, 300);
+        }
+
+        function calculateMaxSkew() {
+            const skews = deskewData.lanes.map(l => l.skew);
+            deskewData.maxSkew = Math.max(...skews) - Math.min(...skews);
+            
+            document.getElementById('maxSkew').textContent = 
+                deskewData.maxSkew.toFixed(2) + ' ns';
+            
+            const statusItem = document.querySelectorAll('#deskewStatus .status-item')[0];
+            if (deskewData.maxSkew > 20) {
+                statusItem.classList.add('error');
+                statusItem.classList.remove('success');
+            } else {
+                statusItem.classList.add('success');
+                statusItem.classList.remove('error');
+            }
+        }
+
+        function updateLaneDisplay(laneId) {
+            const lane = deskewData.lanes[laneId];
+            
+            document.getElementById(`lane-${laneId}-skew`).textContent = 
+                lane.skew.toFixed(2);
+            document.getElementById(`lane-${laneId}-delay`).textContent = 
+                lane.delay.toFixed(2);
+            document.getElementById(`lane-${laneId}-arrival`).textContent = 
+                lane.arrivalTime.toFixed(2);
+            
+            const statusDiv = document.getElementById(`lane-${laneId}-status`);
+            if (lane.locked) {
+                statusDiv.className = 'lane-status locked';
+                statusDiv.textContent = '✓ 已对齐';
+            } else {
+                statusDiv.className = 'lane-status unlocked';
+                statusDiv.textContent = '未对齐';
+            }
+        }
+
+        function drawDeskewWave() {
+            const canvas = document.getElementById('deskewCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 200;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', 
+                           '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
+            
+            const baseX = 50;
+            const spacing = 20;
+            
+            deskewData.lanes.forEach((lane, i) => {
+                const y = 20 + i * spacing;
+                const arrivalX = baseX + (lane.arrivalTime - 1000) * 10; // scale for display
+                const alignedX = deskewData.aligned ? baseX + deskewData.maxSkew * 10 : arrivalX;
+                
+                // 绘制lane线
+                ctx.strokeStyle = colors[i];
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(deskewData.aligned ? alignedX : arrivalX, y);
+                ctx.stroke();
+                
+                // 绘制到达点
+                ctx.fillStyle = colors[i];
+                ctx.beginPath();
+                ctx.arc(arrivalX, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 如果已对齐，绘制对齐线
+                if (deskewData.aligned) {
+                    ctx.strokeStyle = '#2ecc71';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(alignedX, y);
+                    ctx.lineTo(alignedX + 50, y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                // 标签
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px monospace';
+                ctx.fillText(`L${i}`, 5, y + 4);
+            });
+            
+            // 绘制时间轴
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(baseX, 0);
+            ctx.lineTo(baseX, canvas.height);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#ecf0f1';
+            ctx.font = '10px monospace';
+            ctx.fillText('T=0', baseX - 15, canvas.height - 5);
+        }
+
+        function resetDeskew() {
+            clearInterval(deskewInterval);
+            deskewData = {
+                lanes: Array(8).fill().map((_, i) => ({
+                    id: i,
+                    skew: 0,
+                    delay: 0,
+                    locked: false,
+                    arrivalTime: 0
+                })),
+                maxSkew: 0,
+                aligned: false
+            };
+            
+            initLaneDisplay();
+            
+            const canvas = document.getElementById('deskewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            document.getElementById('maxSkew').textContent = '0 ns';
+            document.getElementById('deskewState').textContent = '未开始';
+            document.getElementById('deskewProgress').textContent = '0 / 8 lanes';
+            
+            // 清除状态样式
+            document.querySelectorAll('#deskewStatus .status-item').forEach(item => {
+                item.classList.remove('success', 'error');
+            });
+        }
+
+        // ==================== BER Monitor ====================
+        function startBERMonitor() {
+            berData.history = [];
+            setBERLevel('good');
+            
+            berInterval = setInterval(() => {
+                updateBERData();
+                drawBERChart();
+            }, 1000);
+        }
+
+        function updateBERData() {
+            // 根据当前级别生成BER数据
+            const now = Date.now();
+            berData.history.push({
+                time: now,
+                ber: berData.currentBER
+            });
+            
+            // 保持最近60个数据点
+            if (berData.history.length > 60) {
+                berData.history.shift();
+            }
+            
+            updateBERStatus();
+        }
+
+        function setBERLevel(level) {
+            switch(level) {
+                case 'good':
+                    berData.currentBER = (Math.random() * 5 + 1) * 1e-13;
+                    berData.errorBits = Math.floor(berData.currentBER * berData.totalBits);
+                    break;
+                case 'warning':
+                    berData.currentBER = (Math.random() * 5 + 5) * 1e-11;
+                    berData.errorBits = Math.floor(berData.currentBER * berData.totalBits);
+                    break;
+                case 'critical':
+                    berData.currentBER = (Math.random() * 5 + 1) * 1e-9;
+                    berData.errorBits = Math.floor(berData.currentBER * berData.totalBits);
+                    break;
+            }
+        }
+
+        function updateBERStatus() {
+            // 格式化BER显示
+            const berStr = berData.currentBER.toExponential(2);
+            document.getElementById('currentBER').textContent = berStr;
+            document.getElementById('errorBits').textContent = 
+                berData.errorBits.toLocaleString();
+            document.getElementById('totalBits').textContent = '8.0 × 10¹¹';
+            
+            // 判断状态
+            let state = '✓ 正常';
+            let stateClass = 'success';
+            if (berData.currentBER > 1e-10) {
+                state = '⚠️ 警告';
+                stateClass = 'warning';
+            }
+            if (berData.currentBER > 1e-9) {
+                state = '✗ 严重';
+                stateClass = 'error';
+            }
+            
+            document.getElementById('berState').textContent = state;
+            const statusItems = document.querySelectorAll('#berStatus .status-item');
+            statusItems[3].className = `status-item ${stateClass}`;
+        }
+
+        function drawBERChart() {
+            const viz = document.getElementById('berViz');
+            
+            if (berData.history.length === 0) return;
+            
+            let html = '<div style="color: #00ff00; padding: 20px;">';
+            html += '<div style="font-size: 18px; margin-bottom: 15px;">实时BER曲线</div>';
+            
+            // 简单的ASCII图表
+            const maxBER = Math.max(...berData.history.map(d => d.ber));
+            const height = 10;
+            
+            for (let row = height; row >= 0; row--) {
+                const threshold = (maxBER / height) * row;
+                html += '<div style="display: flex; gap: 2px;">';
+                
+                berData.history.slice(-40).forEach(point => {
+                    if (point.ber >= threshold) {
+                        if (point.ber < 1e-12) {
+                            html += '<span style="color: #2ecc71;">█</span>';
+                        } else if (point.ber < 1e-10) {
+                            html += '<span style="color: #f39c12;">█</span>';
+                        } else {
+                            html += '<span style="color: #e74c3c;">█</span>';
+                        }
+                    } else {
+                        html += '<span style="color: #34495e;">░</span>';
+                    }
+                });
+                
+                html += `<span style="margin-left: 10px; font-size: 10px;">
+                        ${threshold.toExponential(1)}</span>`;
+                html += '</div>';
+            }
+            
+            html += '<div style="margin-top: 10px; border-top: 1px solid #7f8c8d; padding-top: 10px;">';
+            html += '时间轴 (最近40秒) →';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            viz.innerHTML = html;
+        }
+
+        // ==================== IDLE Detection ====================
+        function startIDLEDetection() {
+            resetIDLE();
+            idleData.detected = false;
+            
+            idleInterval = setInterval(() => {
+                generateIDLEStream();
+                updateIDLEStatus();
+            }, 300);
+        }
+
+        function generateIDLEStream() {
+            const viz = document.getElementById('idleViz');
+            idleData.blocks = [];
+            
+            // 随机生成IDLE和数据块
+            for (let i = 0; i < 30; i++) {
+                const rand = Math.random();
+                let blockType;
+                
+                if (rand < 0.6) {
+                    blockType = 'IDLE';
+                    idleData.consecutiveCount++;
+                    idleData.totalCount++;
+                } else {
+                    blockType = 'DATA';
+                    if (idleData.consecutiveCount >= 16 && !idleData.detected) {
+                        idleData.detected = true;
+                    }
+                    idleData.consecutiveCount = 0;
+                }
+                
+                idleData.blocks.push(blockType);
+            }
+            
+            // 渲染
+            let html = '<div class="bit-stream">';
+            idleData.blocks.forEach((type, idx) => {
+                const className = type === 'IDLE' ? 'idle' : 'data';
+                html += `<div class="bit ${className}" 
+                         style="width: 60px; font-size: 11px;">
+                         ${type}
+                         </div>`;
+            });
+            html += '</div>';
+            
+            if (idleData.detected) {
+                html += `<div style="color: #2ecc71; margin-top: 20px; font-size: 18px;">
+                         ✓ IDLE检测成功! 已连续接收${idleData.consecutiveCount}个IDLE
+                         </div>`;
+            } else {
+                html += `<div style="color: #f39c12; margin-top: 20px;">
+                         检测中... 当前连续IDLE: ${idleData.consecutiveCount}
+                         </div>`;
+            }
+            
+            viz.innerHTML = html;
+        }
+
+        function sendDataFrames() {
+            // 模拟发送数据帧，减少IDLE
+            idleData.consecutiveCount = 0;
+            idleData.detected = false;
+        }
+
+        function sendIDLEOnly() {
+            // 模拟只发送IDLE
+            idleData.consecutiveCount += 20;
+            if (idleData.consecutiveCount >= 16) {
+                idleData.detected = true;
+            }
+            idleData.totalCount += 20;
+        }
+
+        function updateIDLEStatus() {
+            document.getElementById('idleDetected').textContent = 
+                idleData.detected ? '✓ 已检测' : '未检测';
+            document.getElementById('consecutiveIdle').textContent = 
+                idleData.consecutiveCount;
+            document.getElementById('totalIdle').textContent = 
+                idleData.totalCount;
+            document.getElementById('errorIdle').textContent = 
+                idleData.errorCount;
+            
+            const statusItem = document.querySelectorAll('#idleStatus .status-item')[0];
+            if (idleData.detected) {
+                statusItem.classList.add('success');
+            } else {
+                statusItem.classList.remove('success');
+            }
+        }
+
+        function resetIDLE() {
+            clearInterval(idleInterval);
+            idleData = {
+                detected: false,
+                consecutiveCount: 0,
+                totalCount: 0,
+                errorCount: 0,
+                blocks: []
+            };
+            
+            document.getElementById('idleViz').innerHTML = 
+                '<div style="color: #00ff00;">等待开始IDLE检测...</div>';
+            updateIDLEStatus();
+            
+            // 清除状态样式
+            document.querySelectorAll('#idleStatus .status-item').forEach(item => {
+                item.classList.remove('success');
+            });
+        }
+
+        // 页面加载初始化
+        window.addEventListener('load', () => {
+            initLaneDisplay();
+            
+            // 添加淡入动画
+            document.querySelectorAll('.section').forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    section.style.transition = 'all 0.5s ease';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                stopAllAnimations();
+            }
+        });
+    </script>
+</body>
+</html>
