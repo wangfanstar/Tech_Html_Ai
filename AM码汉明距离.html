@@ -1,0 +1,1506 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>AM码汉明距离 - 原理与可视化</title>  
+    <style>  
+        * {  
+            margin: 0;  
+            padding: 0;  
+            box-sizing: border-box;  
+        }  
+
+        body {  
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;  
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
+            padding: 20px;  
+            min-height: 100vh;  
+            color: #333;  
+        }  
+
+        .container {  
+            max-width: 1400px;  
+            margin: 0 auto;  
+            background: rgba(255, 255, 255, 0.98);  
+            border-radius: 20px;  
+            padding: 40px;  
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);  
+        }  
+
+        h1 {  
+            text-align: center;  
+            color: #667eea;  
+            margin-bottom: 10px;  
+            font-size: 2.5em;  
+        }  
+
+        .subtitle {  
+            text-align: center;  
+            color: #7f8c8d;  
+            margin-bottom: 40px;  
+            font-size: 1.2em;  
+        }  
+
+        .theory-section {  
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);  
+            border-left: 5px solid #2196f3;  
+            padding: 25px;  
+            border-radius: 10px;  
+            margin-bottom: 30px;  
+        }  
+
+        .theory-section h2 {  
+            color: #1565c0;  
+            margin-bottom: 15px;  
+            display: flex;  
+            align-items: center;  
+            gap: 10px;  
+        }  
+
+        .theory-section p {  
+            color: #0d47a1;  
+            line-height: 1.8;  
+            margin-bottom: 15px;  
+        }  
+
+        .highlight-box {  
+            background: #fff3cd;  
+            border-left: 4px solid #ffc107;  
+            padding: 15px;  
+            margin: 15px 0;  
+            border-radius: 6px;  
+        }  
+
+        .highlight-box strong {  
+            color: #f57c00;  
+        }  
+
+        .formula-box {  
+            background: #2c3e50;  
+            color: #00ff00;  
+            padding: 20px;  
+            border-radius: 10px;  
+            font-family: 'Courier New', monospace;  
+            font-size: 16px;  
+            margin: 20px 0;  
+            overflow-x: auto;  
+            white-space: pre-wrap;  /* 关键：保持换行 */  
+            line-height: 1.8;       /* 增加行高 */  
+        }  
+
+        .demo-section {  
+            background: white;  
+            border-radius: 15px;  
+            padding: 30px;  
+            margin: 30px 0;  
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);  
+        }  
+
+        .demo-title {  
+            font-size: 1.8em;  
+            color: #667eea;  
+            margin-bottom: 20px;  
+            padding-bottom: 10px;  
+            border-bottom: 3px solid #667eea;  
+        }  
+
+        .controls {  
+            display: flex;  
+            gap: 15px;  
+            margin-bottom: 25px;  
+            flex-wrap: wrap;  
+            justify-content: center;  
+        }  
+
+        .btn {  
+            padding: 12px 25px;  
+            border: none;  
+            border-radius: 8px;  
+            font-weight: bold;  
+            cursor: pointer;  
+            transition: all 0.3s ease;  
+            font-size: 1em;  
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);  
+        }  
+
+        .btn-primary {  
+            background: linear-gradient(135deg, #667eea, #764ba2);  
+            color: white;  
+        }  
+
+        .btn-success {  
+            background: linear-gradient(135deg, #2ecc71, #27ae60);  
+            color: white;  
+        }  
+
+        .btn-warning {  
+            background: linear-gradient(135deg, #f39c12, #e67e22);  
+            color: white;  
+        }  
+
+        .btn-danger {  
+            background: linear-gradient(135deg, #e74c3c, #c0392b);  
+            color: white;  
+        }  
+
+        .btn:hover {  
+            transform: translateY(-3px);  
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);  
+        }  
+
+        .btn:active {  
+            transform: translateY(0);  
+        }  
+
+        .btn:disabled {  
+            opacity: 0.5;  
+            cursor: not-allowed;  
+            transform: none;  
+        }  
+
+        /* 手动输入区域 */  
+        .input-section {  
+            background: #f8f9fa;  
+            border-radius: 12px;  
+            padding: 25px;  
+            margin: 25px 0;  
+            border: 2px dashed #667eea;  
+        }  
+
+        .input-group {  
+            margin: 20px 0;  
+        }  
+
+        .input-label {  
+            font-weight: bold;  
+            color: #2c3e50;  
+            margin-bottom: 10px;  
+            display: block;  
+            font-size: 1.1em;  
+        }  
+
+        .input-textarea {  
+            width: 100%;  
+            min-height: 120px;  
+            padding: 15px;  
+            border: 2px solid #bdc3c7;  
+            border-radius: 8px;  
+            font-family: 'Courier New', monospace;  
+            font-size: 14px;  
+            resize: vertical;  
+            transition: all 0.3s ease;  
+        }  
+
+        .input-textarea:focus {  
+            outline: none;  
+            border-color: #667eea;  
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);  
+        }  
+
+        .input-textarea.error {  
+            border-color: #e74c3c;  
+            background: #fee;  
+        }  
+
+        .input-hint {  
+            font-size: 0.9em;  
+            color: #7f8c8d;  
+            margin-top: 8px;  
+        }  
+
+        .input-format-select {  
+            display: flex;  
+            gap: 15px;  
+            margin: 15px 0;  
+            flex-wrap: wrap;  
+        }  
+
+        .format-option {  
+            display: flex;  
+            align-items: center;  
+            gap: 8px;  
+        }  
+
+        .format-option input[type="radio"] {  
+            width: 20px;  
+            height: 20px;  
+            cursor: pointer;  
+        }  
+
+        .format-option label {  
+            cursor: pointer;  
+            font-size: 1em;  
+        }  
+
+        /* AM码选择区域 */  
+        .am-matrix {  
+            display: grid;  
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));  
+            gap: 20px;  
+            margin: 25px 0;  
+        }  
+
+        .am-card {  
+            background: #f8f9fa;  
+            border-radius: 12px;  
+            padding: 20px;  
+            border: 2px solid #dee2e6;  
+            transition: all 0.3s ease;  
+            cursor: pointer;  
+        }  
+
+        .am-card:hover {  
+            transform: translateY(-5px);  
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);  
+            border-color: #667eea;  
+        }  
+
+        .am-card.selected {  
+            background: #e3f2fd;  
+            border-color: #2196f3;  
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.4);  
+        }  
+
+        .am-card.reference {  
+            background: #d4edda;  
+            border-color: #28a745;  
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.4);  
+        }  
+
+        .lane-label {  
+            font-size: 1.3em;  
+            font-weight: bold;  
+            color: #667eea;  
+            margin-bottom: 15px;  
+            display: flex;  
+            align-items: center;  
+            gap: 8px;  
+        }  
+
+        .pattern-display {  
+            font-family: 'Courier New', monospace;  
+            background: #2c3e50;  
+            color: #00ff00;  
+            padding: 12px;  
+            border-radius: 6px;  
+            margin: 8px 0;  
+            font-size: 13px;  
+            overflow-x: auto;  
+        }  
+
+        .binary-display {  
+            font-family: 'Courier New', monospace;  
+            font-size: 11px;  
+            color: #34495e;  
+            margin: 5px 0;  
+            word-break: break-all;  
+            line-height: 1.6;  
+        }  
+
+        .hamming-result {  
+            background: white;  
+            border-radius: 10px;  
+            padding: 20px;  
+            margin: 25px 0;  
+            border: 2px solid #667eea;  
+        }  
+
+        .hamming-grid {  
+            display: grid;  
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));  
+            gap: 10px;  
+            margin: 20px 0;  
+        }  
+
+        .hamming-cell {  
+            padding: 15px;  
+            border-radius: 8px;  
+            text-align: center;  
+            font-weight: bold;  
+            transition: all 0.3s ease;  
+            cursor: pointer;  
+        }  
+
+        .hamming-cell:hover {  
+            transform: scale(1.05);  
+        }  
+
+        .hamming-high {  
+            background: linear-gradient(135deg, #2ecc71, #27ae60);  
+            color: white;  
+        }  
+
+        .hamming-medium {  
+            background: linear-gradient(135deg, #f39c12, #e67e22);  
+            color: white;  
+        }  
+
+        .hamming-low {  
+            background: linear-gradient(135deg, #e74c3c, #c0392b);  
+            color: white;  
+        }  
+
+        .bit-comparison {  
+            display: flex;  
+            flex-direction: column;  
+            gap: 10px;  
+            margin: 20px 0;  
+        }  
+
+        .bit-row {  
+            display: flex;  
+            gap: 3px;  
+            align-items: center;  
+            flex-wrap: wrap;  
+        }  
+
+        .bit-row-label {  
+            min-width: 120px;  
+            font-weight: bold;  
+            color: #2c3e50;  
+        }  
+
+        .bit-box {  
+            width: 25px;  
+            height: 25px;  
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            border-radius: 4px;  
+            font-family: 'Courier New', monospace;  
+            font-weight: bold;  
+            font-size: 12px;  
+        }  
+
+        .bit-same {  
+            background: #d4edda;  
+            color: #155724;  
+            border: 1px solid #c3e6cb;  
+        }  
+
+        .bit-diff {  
+            background: #f8d7da;  
+            color: #721c24;  
+            border: 1px solid #f5c6cb;  
+            animation: blink 0.5s ease;  
+        }  
+
+        @keyframes blink {  
+            0%, 100% { opacity: 1; }  
+            50% { opacity: 0.5; }  
+        }  
+
+        .stats-panel {  
+            background: #ecf0f1;  
+            border-radius: 10px;  
+            padding: 20px;  
+            margin: 20px 0;  
+        }  
+
+        .stat-item {  
+            display: flex;  
+            justify-content: space-between;  
+            padding: 12px;  
+            margin: 8px 0;  
+            background: white;  
+            border-radius: 6px;  
+            border-left: 4px solid #667eea;  
+        }  
+
+        .stat-label {  
+            font-weight: bold;  
+            color: #2c3e50;  
+        }  
+
+        .stat-value {  
+            font-family: 'Courier New', monospace;  
+            color: #7f8c8d;  
+            font-weight: bold;  
+        }  
+
+        .error-message {  
+            background: #f8d7da;  
+            color: #721c24;  
+            padding: 15px;  
+            border-radius: 8px;  
+            border-left: 4px solid #e74c3c;  
+            margin: 15px 0;  
+        }  
+
+        .success-message {  
+            background: #d4edda;  
+            color: #155724;  
+            padding: 15px;  
+            border-radius: 8px;  
+            border-left: 4px solid #28a745;  
+            margin: 15px 0;  
+        }  
+
+        .legend {  
+            display: flex;  
+            gap: 20px;  
+            flex-wrap: wrap;  
+            margin: 20px 0;  
+            padding: 15px;  
+            background: #f8f9fa;  
+            border-radius: 8px;  
+        }  
+
+        .legend-item {  
+            display: flex;  
+            align-items: center;  
+            gap: 8px;  
+        }  
+
+        .legend-color {  
+            width: 20px;  
+            height: 20px;  
+            border-radius: 4px;  
+        }  
+
+        table {  
+            width: 100%;  
+            border-collapse: collapse;  
+            margin: 20px 0;  
+        }  
+
+        th, td {  
+            padding: 12px;  
+            text-align: center;  
+            border: 1px solid #dee2e6;  
+        }  
+
+        th {  
+            background: #667eea;  
+            color: white;  
+            font-weight: bold;  
+        }  
+
+        tr:nth-child(even) {  
+            background: #f8f9fa;  
+        }  
+
+        tr:hover {  
+            background: #e3f2fd;  
+        }  
+
+        .info-tag {  
+            display: inline-block;  
+            padding: 5px 12px;  
+            border-radius: 20px;  
+            font-size: 0.85em;  
+            font-weight: bold;  
+            margin: 0 5px;  
+        }  
+
+        .tag-success {  
+            background: #d4edda;  
+            color: #155724;  
+        }  
+
+        .tag-warning {  
+            background: #fff3cd;  
+            color: #856404;  
+        }  
+
+        .tag-danger {  
+            background: #f8d7da;  
+            color: #721c24;  
+        }  
+
+        @media (max-width: 768px) {  
+            .container {  
+                padding: 20px;  
+            }  
+            
+            h1 {  
+                font-size: 1.8em;  
+            }  
+            
+            .am-matrix {  
+                grid-template-columns: 1fr;  
+            }  
+
+            .bit-row {  
+                font-size: 10px;  
+            }  
+
+            .bit-box {  
+                width: 20px;  
+                height: 20px;  
+                font-size: 10px;  
+            }  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h1>🔢 AM码汉明距离详解</h1>  
+        <p class="subtitle">Hamming Distance in Alignment Markers - 原理、作用与可视化演示</p>  
+
+        <!-- 理论部分 -->  
+        <div class="theory-section">  
+            <h2>📚 什么是汉明距离？</h2>  
+            <p>  
+                <strong>汉明距离（Hamming Distance）</strong>是两个等长字符串对应位置不同字符的个数。  
+                在二进制编码中，汉明距离就是两个码字之间不同bit位的数量。  
+            </p>  
+            
+            <div class="formula-box">// 汉明距离计算示例  
+Code A: 10110101  
+Code B: 10010001  
+        ^^   ^^  ← 4个位置不同  
+
+Hamming Distance = 4</div>  
+
+            <div class="highlight-box">  
+                <strong>核心公式：</strong><br>  
+                HD(A, B) = Σ(A[i] XOR B[i])  （i = 0 to n-1）<br>  
+                即：对两个码字进行按位异或，统计结果中1的个数  
+            </div>  
+        </div>  
+
+        <div class="theory-section">  
+            <h2>🎯 AM码中汉明距离的作用</h2>  
+            <p>  
+                在800G以太网的PCS层，AM（Alignment Marker）码必须具有<strong>足够大的汉明距离</strong>，原因如下：  
+            </p>  
+            
+            <h3 style="color: #1565c0; margin: 20px 0 10px 0;">1️⃣ 抗误检测能力</h3>  
+            <p>  
+                <span class="info-tag tag-success">汉明距离 ≥ d+1</span><br>  
+                可以检测出 <strong>d</strong> 位错误。例如：汉明距离=5，可以检测出4位错误。  
+            </p>  
+
+            <h3 style="color: #1565c0; margin: 20px 0 10px 0;">2️⃣ 纠错能力</h3>  
+            <p>  
+                <span class="info-tag tag-warning">汉明距离 ≥ 2t+1</span><br>  
+                可以纠正 <strong>t</strong> 位错误。例如：汉明距离=7，可以纠正3位错误。  
+            </p>  
+
+            <h3 style="color: #1565c0; margin: 20px 0 10px 0;">3️⃣ Lane识别</h3>  
+            <p>  
+                不同lane的AM码必须有<strong>足够大的汉明距离</strong>，防止：  
+            </p>  
+            <ul style="margin-left: 30px; line-height: 2;">  
+                <li>错误识别lane（Lane misidentification）</li>  
+                <li>AM码误判为普通数据</li>  
+                <li>多bit错误导致的lane混淆</li>  
+            </ul>  
+
+            <div class="highlight-box">  
+                <strong>IEEE 802.3bs标准要求：</strong><br>  
+                • AM码之间的最小汉明距离 ≥ 10<br>  
+                • AM码与其反码的汉明距离 = 64（全部不同）<br>  
+                • 不同lane的AM码之间汉明距离 ≥ 10  
+            </div>  
+        </div>  
+
+        <div class="theory-section">  
+            <h2>⚙️ 工作原理</h2>  
+            <p>  
+                <strong>AM检测流程：</strong>  
+            </p>  
+            <div class="formula-box">Step 1: 接收到256-bit block  
+
+Step 2: 计算与预期AM码的汉明距离  
+
+Step 3: 判断：  
+    if HD < 阈值(通常4-5):  
+        识别为AM码 ✓  
+    else:  
+        不是AM码 ✗  
+
+Step 4: 对8条lane分别进行AM检测  
+
+Step 5: 根据AM位置进行lane对齐</div>  
+
+            <h3 style="color: #1565c0; margin: 20px 0 10px 0;">为什么需要大汉明距离？</h3>  
+            <table>  
+                <thead>  
+                    <tr>  
+                        <th>场景</th>  
+                        <th>汉明距离要求</th>  
+                        <th>原因</th>  
+                    </tr>  
+                </thead>  
+                <tbody>  
+                    <tr>  
+                        <td>AM vs 随机数据</td>  
+                        <td>≥ 10</td>  
+                        <td>防止随机数据被误判为AM</td>  
+                    </tr>  
+                    <tr>  
+                        <td>不同Lane的AM</td>  
+                        <td>≥ 10</td>  
+                        <td>防止Lane错误识别</td>  
+                    </tr>  
+                    <tr>  
+                        <td>AM vs AM反码</td>  
+                        <td>64 (最大)</td>  
+                        <td>增强识别可靠性</td>  
+                    </tr>  
+                    <tr>  
+                        <td>容错能力</td>  
+                        <td>≥ 2t+1</td>  
+                        <td>t位错误仍能正确识别</td>  
+                    </tr>  
+                </tbody>  
+            </table>  
+        </div>  
+
+        <!-- 手动输入128bit编码 -->  
+        <div class="demo-section">  
+            <div class="demo-title">✍️ 手动输入编码计算汉明距离</div>  
+            
+            <div class="input-section">  
+                <div class="input-group">  
+                    <label class="input-label">📝 输入格式选择：</label>  
+                    <div class="input-format-select">  
+                        <div class="format-option">  
+                            <input type="radio" name="inputFormat" id="formatBinary" value="binary" checked>  
+                            <label for="formatBinary">二进制 (0/1)</label>  
+                        </div>  
+                        <div class="format-option">  
+                            <input type="radio" name="inputFormat" id="formatHex" value="hex">  
+                            <label for="formatHex">十六进制 (0-F)</label>  
+                        </div>  
+                    </div>  
+                </div>  
+
+                <div class="input-group">  
+                    <label class="input-label">🔢 输入编码A（128 bits）：</label>  
+                    <textarea class="input-textarea" id="inputCodeA"   
+                              placeholder="请输入128位二进制码（可以包含空格或换行）&#10;例如：&#10;10010000 01110110 01000111 11001011 ...&#10;或32位十六进制：&#10;907647CB F0C4E61B C5FB659A A2793D8C"></textarea>  
+                    <div class="input-hint">💡 提示：128 bits = 32位十六进制 = 16字节</div>  
+                </div>  
+
+                <div class="input-group">  
+                    <label class="input-label">🔢 输入编码B（128 bits）：</label>  
+                    <textarea class="input-textarea" id="inputCodeB"   
+                              placeholder="请输入第二个128位编码"></textarea>  
+                </div>  
+
+                <div class="controls">  
+                    <button class="btn btn-primary" onclick="calculateCustomHD()">🧮 计算汉明距离</button>  
+                    <button class="btn btn-success" onclick="generateRandom128()">🎲 生成随机编码</button>  
+                    <button class="btn btn-warning" onclick="loadAMPattern()">📋 加载AM模式</button>  
+                    <button class="btn btn-danger" onclick="clearInputs()">🗑️ 清空</button>  
+                </div>  
+
+                <div id="inputErrorMessage"></div>  
+            </div>  
+
+            <div id="customHDResult" style="display: none;">  
+                <!-- 结果将显示在这里 -->  
+            </div>  
+        </div>  
+
+        <!-- 交互演示 -->  
+        <div class="demo-section">  
+            <div class="demo-title">🔬 选择AM码计算汉明距离</div>  
+            
+            <div class="controls">  
+                <button class="btn btn-primary" onclick="selectRandomPair()">🎲 随机选择两个Lane</button>  
+                <button class="btn btn-success" onclick="calculateAll()">📊 计算所有距离</button>  
+                <button class="btn btn-warning" onclick="simulateError()">⚠️ 模拟误码</button>  
+                <button class="btn btn-danger" onclick="resetDemo()">🔄 重置</button>  
+            </div>  
+
+            <p style="text-align: center; color: #7f8c8d; margin: 15px 0;">  
+                👆 点击选择任意两个Lane进行汉明距离计算  
+            </p>  
+
+            <div class="am-matrix" id="amMatrix">  
+                <!-- 动态生成 -->  
+            </div>  
+
+            <div class="hamming-result" id="hammingResult" style="display: none;">  
+                <h3 style="color: #667eea; margin-bottom: 15px;">📈 汉明距离计算结果</h3>  
+                <div class="bit-comparison" id="bitComparison"></div>  
+                <div class="stats-panel" id="statsPanel"></div>  
+            </div>  
+        </div>  
+
+        <!-- 汉明距离矩阵 -->  
+        <div class="demo-section">  
+            <div class="demo-title">🗺️ 8 Lane AM码汉明距离矩阵</div>  
+            
+            <div class="controls">  
+                <button class="btn btn-success" onclick="showHammingMatrix()">📊 显示完整矩阵</button>  
+                <button class="btn btn-primary" onclick="highlightMinDistance()">🔍 标记最小距离</button>  
+            </div>  
+
+            <div id="matrixDisplay"></div>  
+
+            <div class="legend">  
+                <div class="legend-item">  
+                    <div class="legend-color hamming-high"></div>  
+                    <span>高距离 (HD ≥ 15) - 优秀</span>  
+                </div>  
+                <div class="legend-item">  
+                    <div class="legend-color hamming-medium"></div>  
+                    <span>中距离 (10 ≤ HD < 15) - 合格</span>  
+                </div>  
+                <div class="legend-item">  
+                    <div class="legend-color hamming-low"></div>  
+                    <span>低距离 (HD < 10) - 不合格</span>  
+                </div>  
+            </div>  
+        </div>  
+
+    </div>  
+
+    <script>  
+        // 800G AM Patterns (实际使用128-bit，这里用64-bit示例)  
+        const AM_PATTERNS_64 = {  
+            0: { hex: '907647CB6F89B834', name: 'Lane 0' },  
+            1: { hex: 'F0C4E61B0F3B19E4', name: 'Lane 1' },  
+            2: { hex: 'C5FB659A3A049A65', name: 'Lane 2' },  
+            3: { hex: 'A2793D8C5D86C273', name: 'Lane 3' },  
+            4: { hex: 'E15A2B671EA5D498', name: 'Lane 4' },  
+            5: { hex: 'FF4908B500B6F74A', name: 'Lane 5' },  
+            6: { hex: 'C86C97F337936 80C', name: 'Lane 6' },  
+            7: { hex: 'D4A5F01C2B5A0FE3', name: 'Lane 7' }  
+        };  
+
+        let selectedLanes = [];  
+        let hammingMatrix = [];  
+
+        // 16进制转二进制（支持128bit）  
+        function hexToBinary(hex) {  
+            hex = hex.replace(/\s+/g, '').replace(/0x/gi, '');  
+            let binary = '';  
+            for (let i = 0; i < hex.length; i++) {  
+                binary += parseInt(hex[i], 16).toString(2).padStart(4, '0');  
+            }  
+            return binary;  
+        }  
+
+        // 二进制转16进制  
+        function binaryToHex(binary) {  
+            binary = binary.replace(/\s+/g, '');  
+            let hex = '';  
+            for (let i = 0; i < binary.length; i += 4) {  
+                hex += parseInt(binary.substr(i, 4), 2).toString(16).toUpperCase();  
+            }  
+            return hex;  
+        }  
+
+        // 计算汉明距离  
+        function calculateHammingDistance(bin1, bin2) {  
+            if (bin1.length !== bin2.length) {  
+                return -1;  
+            }  
+            let distance = 0;  
+            for (let i = 0; i < bin1.length; i++) {  
+                if (bin1[i] !== bin2[i]) distance++;  
+            }  
+            return distance;  
+        }  
+
+        // 验证二进制输入  
+        function validateBinary(input) {  
+            const clean = input.replace(/\s+/g, '');  
+            return /^[01]+$/.test(clean) ? clean : null;  
+        }  
+
+        // 验证十六进制输入  
+        function validateHex(input) {  
+            const clean = input.replace(/\s+/g, '').replace(/0x/gi, '');  
+            return /^[0-9A-Fa-f]+$/.test(clean) ? clean : null;  
+        }  
+
+        // 显示错误消息  
+        function showError(message) {  
+            const errorDiv = document.getElementById('inputErrorMessage');  
+            errorDiv.innerHTML = `<div class="error-message">❌ ${message}</div>`;  
+            setTimeout(() => {  
+                errorDiv.innerHTML = '';  
+            }, 5000);  
+        }  
+
+        // 显示成功消息  
+        function showSuccess(message) {  
+            const errorDiv = document.getElementById('inputErrorMessage');  
+            errorDiv.innerHTML = `<div class="success-message">✅ ${message}</div>`;  
+        }  
+
+        // 计算自定义编码的汉明距离  
+        function calculateCustomHD() {  
+            const format = document.querySelector('input[name="inputFormat"]:checked').value;  
+            const inputA = document.getElementById('inputCodeA').value.trim();  
+            const inputB = document.getElementById('inputCodeB').value.trim();  
+
+            if (!inputA || !inputB) {  
+                showError('请输入两个编码！');  
+                return;  
+            }  
+
+            let binaryA, binaryB;  
+
+            try {  
+                if (format === 'binary') {  
+                    binaryA = validateBinary(inputA);  
+                    binaryB = validateBinary(inputB);  
+                    
+                    if (!binaryA || !binaryB) {  
+                        showError('二进制格式错误！请只输入0和1');  
+                        return;  
+                    }  
+                } else {  
+                    const hexA = validateHex(inputA);  
+                    const hexB = validateHex(inputB);  
+                    
+                    if (!hexA || !hexB) {
+                        showError('十六进制格式错误！请只输入0-9和A-F');
+                        return;
+                    }
+                    
+                    binaryA = hexToBinary(hexA);
+                    binaryB = hexToBinary(hexB);
+                }
+
+                // 检查长度
+                if (binaryA.length !== 128 || binaryB.length !== 128) {
+                    showError(`编码长度错误！需要128位，当前：A=${binaryA.length}位, B=${binaryB.length}位`);
+                    document.getElementById('inputCodeA').classList.add('error');
+                    document.getElementById('inputCodeB').classList.add('error');
+                    return;
+                }
+
+                // 移除错误样式
+                document.getElementById('inputCodeA').classList.remove('error');
+                document.getElementById('inputCodeB').classList.remove('error');
+
+                // 计算汉明距离
+                const distance = calculateHammingDistance(binaryA, binaryB);
+                
+                showSuccess(`汉明距离计算成功！HD = ${distance}`);
+                
+                // 显示详细结果
+                displayCustomHDResult(binaryA, binaryB, distance, inputA, inputB);
+
+            } catch (error) {
+                showError('计算出错：' + error.message);
+            }
+        }
+
+        // 显示自定义编码的汉明距离结果
+        function displayCustomHDResult(bin1, bin2, distance, originalA, originalB) {
+            const resultDiv = document.getElementById('customHDResult');
+            resultDiv.style.display = 'block';
+            
+            const errorDetectable = distance - 1;
+            const errorCorrectable = Math.floor((distance - 1) / 2);
+            
+            let html = `
+            <div class="hamming-result">
+                <h3 style="color: #667eea; margin-bottom: 20px;">📊 计算结果</h3>
+                
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">汉明距离 (HD):</span>
+                        <span class="stat-value" style="font-size: 1.8em; color: ${
+                            distance >= 10 ? '#2ecc71' : distance >= 5 ? '#f39c12' : '#e74c3c'
+                        };">
+                            ${distance}
+                        </span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">可检测错误位数:</span>
+                        <span class="stat-value">${errorDetectable} bits</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">可纠正错误位数:</span>
+                        <span class="stat-value">${errorCorrectable} bits</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">相似度:</span>
+                        <span class="stat-value">${((128 - distance) / 128 * 100).toFixed(2)}%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">IEEE 802.3bs标准:</span>
+                        <span class="stat-value">
+                            ${distance >= 10 ? '✅ 符合 (HD ≥ 10)' : '❌ 不符合'}
+                        </span>
+                    </div>
+                </div>
+
+                <h4 style="color: #667eea; margin: 20px 0 10px 0;">🔍 逐位对比 (128 bits)</h4>
+                <div class="bit-comparison">
+            `;
+
+            // 分8行显示，每行16位
+            for (let row = 0; row < 8; row++) {
+                const start = row * 16;
+                const end = start + 16;
+                
+                html += `<div class="bit-row">
+                    <span class="bit-row-label">Bits ${start.toString().padStart(3, '0')}-${(end-1).toString().padStart(3, '0')}:</span>`;
+                
+                for (let i = start; i < end; i++) {
+                    const className = bin1[i] === bin2[i] ? 'bit-same' : 'bit-diff';
+                    html += `<div class="bit-box ${className}" title="位置${i}">${bin1[i]}</div>`;
+                }
+                html += '</div>';
+                
+                html += `<div class="bit-row">
+                    <span class="bit-row-label"></span>`;
+                
+                for (let i = start; i < end; i++) {
+                    const className = bin1[i] === bin2[i] ? 'bit-same' : 'bit-diff';
+                    html += `<div class="bit-box ${className}" title="位置${i}">${bin2[i]}</div>`;
+                }
+                html += '</div>';
+                
+                html += '<div style="height: 10px;"></div>';
+            }
+
+            html += `</div>
+
+                <div class="legend" style="margin-top: 20px;">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #d4edda;"></div>
+                        <span>相同位 (${128 - distance} 个)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f8d7da;"></div>
+                        <span>不同位 (${distance} 个)</span>
+                    </div>
+                </div>
+
+                <h4 style="color: #667eea; margin: 20px 0 10px 0;">📝 编码详情</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <div style="margin-bottom: 15px;">
+                        <strong>编码 A:</strong><br>
+                        <div class="pattern-display">${formatBinaryDisplay(bin1)}</div>
+                        <div style="margin-top: 5px; color: #7f8c8d;">
+                            十六进制: ${binaryToHex(bin1).match(/.{1,8}/g).join(' ')}
+                        </div>
+                    </div>
+                    <div>
+                        <strong>编码 B:</strong><br>
+                        <div class="pattern-display">${formatBinaryDisplay(bin2)}</div>
+                        <div style="margin-top: 5px; color: #7f8c8d;">
+                            十六进制: ${binaryToHex(bin2).match(/.{1,8}/g).join(' ')}
+                        </div>
+                    </div>
+                </div>
+
+                ${generateHDAnalysis(distance)}
+            </div>`;
+
+            resultDiv.innerHTML = html;
+            
+            // 滚动到结果
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 格式化二进制显示
+        function formatBinaryDisplay(binary) {
+            return binary.match(/.{1,8}/g).join(' ');
+        }
+
+        // 生成汉明距离分析
+        function generateHDAnalysis(distance) {
+            let analysis = '';
+            
+            if (distance === 0) {
+                analysis = `
+                <div class="highlight-box">
+                    <strong>✅ 完全相同</strong><br>
+                    两个编码完全一致，汉明距离为0。
+                </div>`;
+            } else if (distance < 5) {
+                analysis = `
+                <div class="highlight-box" style="background: #f8d7da; border-left-color: #e74c3c;">
+                    <strong>⚠️ 距离过小 (HD < 5)</strong><br>
+                    • 容错能力弱，仅能纠正 ${Math.floor((distance-1)/2)} 位错误<br>
+                    • 不适合作为AM码（易误判）<br>
+                    • 可能导致Lane识别错误
+                </div>`;
+            } else if (distance < 10) {
+                analysis = `
+                <div class="highlight-box" style="background: #fff3cd; border-left-color: #f39c12;">
+                    <strong>⚠️ 距离中等 (5 ≤ HD < 10)</strong><br>
+                    • 可纠正 ${Math.floor((distance-1)/2)} 位错误<br>
+                    • 不符合IEEE 802.3bs标准（要求HD ≥ 10）<br>
+                    • 建议增大汉明距离以提高可靠性
+                </div>`;
+            } else if (distance < 20) {
+                analysis = `
+                <div class="highlight-box" style="background: #d4edda; border-left-color: #28a745;">
+                    <strong>✅ 距离良好 (10 ≤ HD < 20)</strong><br>
+                    • 可纠正 ${Math.floor((distance-1)/2)} 位错误<br>
+                    • 符合IEEE 802.3bs标准（HD ≥ 10）<br>
+                    • 适合用作AM码，具有较好的抗误码能力
+                </div>`;
+            } else {
+                analysis = `
+                <div class="highlight-box" style="background: #d4edda; border-left-color: #28a745;">
+                    <strong>✅ 距离优秀 (HD ≥ 20)</strong><br>
+                    • 可纠正 ${Math.floor((distance-1)/2)} 位错误<br>
+                    • 远超IEEE 802.3bs标准要求<br>
+                    • 极强的抗误码能力，几乎不会误识别
+                </div>`;
+            }
+            
+            return analysis;
+        }
+
+        // 生成随机128位编码
+        function generateRandom128() {
+            const format = document.querySelector('input[name="inputFormat"]:checked').value;
+            
+            let randomA = '';
+            let randomB = '';
+            
+            if (format === 'binary') {
+                for (let i = 0; i < 128; i++) {
+                    randomA += Math.random() > 0.5 ? '1' : '0';
+                    randomB += Math.random() > 0.5 ? '1' : '0';
+                    
+                    // 每8位加空格
+                    if ((i + 1) % 8 === 0 && i < 127) {
+                        randomA += ' ';
+                        randomB += ' ';
+                    }
+                }
+            } else {
+                for (let i = 0; i < 32; i++) {
+                    randomA += Math.floor(Math.random() * 16).toString(16).toUpperCase();
+                    randomB += Math.floor(Math.random() * 16).toString(16).toUpperCase();
+                    
+                    // 每8位加空格
+                    if ((i + 1) % 8 === 0 && i < 31) {
+                        randomA += ' ';
+                        randomB += ' ';
+                    }
+                }
+            }
+            
+            document.getElementById('inputCodeA').value = randomA;
+            document.getElementById('inputCodeB').value = randomB;
+            
+            showSuccess('已生成随机128位编码');
+        }
+
+        // 加载AM模式
+        function loadAMPattern() {
+            const lane1 = Math.floor(Math.random() * 8);
+            let lane2 = Math.floor(Math.random() * 8);
+            while (lane2 === lane1) {
+                lane2 = Math.floor(Math.random() * 8);
+            }
+            
+            const format = document.querySelector('input[name="inputFormat"]:checked').value;
+            
+            const hex1 = AM_PATTERNS_64[lane1].hex.replace(/\s+/g, '');
+            const hex2 = AM_PATTERNS_64[lane2].hex.replace(/\s+/g, '');
+            
+            if (format === 'binary') {
+                const bin1 = hexToBinary(hex1);
+                const bin2 = hexToBinary(hex2);
+                
+                document.getElementById('inputCodeA').value = formatBinaryDisplay(bin1);
+                document.getElementById('inputCodeB').value = formatBinaryDisplay(bin2);
+            } else {
+                document.getElementById('inputCodeA').value = hex1.match(/.{1,8}/g).join(' ');
+                document.getElementById('inputCodeB').value = hex2.match(/.{1,8}/g).join(' ');
+            }
+            
+            showSuccess(`已加载 ${AM_PATTERNS_64[lane1].name} 和 ${AM_PATTERNS_64[lane2].name} 的AM模式（64-bit示例）`);
+        }
+
+        // 清空输入
+        function clearInputs() {
+            document.getElementById('inputCodeA').value = '';
+            document.getElementById('inputCodeB').value = '';
+            document.getElementById('inputCodeA').classList.remove('error');
+            document.getElementById('inputCodeB').classList.remove('error');
+            document.getElementById('customHDResult').style.display = 'none';
+            document.getElementById('inputErrorMessage').innerHTML = '';
+        }
+
+        // 初始化AM卡片
+        function initAMCards() {
+            const container = document.getElementById('amMatrix');
+            let html = '';
+            
+            for (let i = 0; i < 8; i++) {
+                const pattern = AM_PATTERNS_64[i];
+                const hex = pattern.hex.replace(/\s+/g, '');
+                const binary = hexToBinary(hex);
+                
+                html += `
+                <div class="am-card" id="lane-${i}" onclick="selectLane(${i})">
+                    <div class="lane-label">
+                        <span>🔷</span>
+                        <span>${pattern.name}</span>
+                    </div>
+                    <div class="pattern-display">
+                        ${hex.match(/.{1,8}/g).join(' ')}
+                    </div>
+                    <div class="binary-display">
+                        ${formatBinaryDisplay(binary)}
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.85em; color: #7f8c8d;">
+                        64 bits (AM + Inverse示例)
+                    </div>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 选择Lane
+        function selectLane(laneId) {
+            const card = document.getElementById(`lane-${laneId}`);
+            
+            if (selectedLanes.includes(laneId)) {
+                selectedLanes = selectedLanes.filter(id => id !== laneId);
+                card.classList.remove('selected');
+            } else {
+                if (selectedLanes.length < 2) {
+                    selectedLanes.push(laneId);
+                    card.classList.add('selected');
+                } else {
+                    // 移除第一个选择
+                    const firstLane = selectedLanes.shift();
+                    document.getElementById(`lane-${firstLane}`).classList.remove('selected');
+                    selectedLanes.push(laneId);
+                    card.classList.add('selected');
+                }
+            }
+            
+            if (selectedLanes.length === 2) {
+                compareSelectedLanes();
+            }
+        }
+
+        // 比较选中的Lanes
+        function compareSelectedLanes() {
+            const [lane1, lane2] = selectedLanes;
+            const hex1 = AM_PATTERNS_64[lane1].hex.replace(/\s+/g, '');
+            const hex2 = AM_PATTERNS_64[lane2].hex.replace(/\s+/g, '');
+            const bin1 = hexToBinary(hex1);
+            const bin2 = hexToBinary(hex2);
+            
+            const distance = calculateHammingDistance(bin1, bin2);
+            
+            displayComparison(lane1, lane2, bin1, bin2, distance);
+        }
+
+        // 显示比较结果
+        function displayComparison(lane1, lane2, bin1, bin2, distance) {
+            const resultDiv = document.getElementById('hammingResult');
+            const comparisonDiv = document.getElementById('bitComparison');
+            const statsDiv = document.getElementById('statsPanel');
+            
+            resultDiv.style.display = 'block';
+            
+            // 显示bit对比（每行16位）
+            let html = `
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #667eea; font-size: 1.2em;">
+                    ${AM_PATTERNS_64[lane1].name} vs ${AM_PATTERNS_64[lane2].name}
+                </strong>
+            </div>`;
+            
+            for (let row = 0; row < 4; row++) {
+                const start = row * 16;
+                const end = start + 16;
+                
+                html += `<div class="bit-row">
+                    <span class="bit-row-label">${AM_PATTERNS_64[lane1].name} [${start}-${end-1}]:</span>`;
+                
+                for (let i = start; i < end; i++) {
+                    const className = bin1[i] === bin2[i] ? 'bit-same' : 'bit-diff';
+                    html += `<div class="bit-box ${className}" title="Bit ${i}">${bin1[i]}</div>`;
+                }
+                html += '</div>';
+                
+                html += `<div class="bit-row">
+                    <span class="bit-row-label">${AM_PATTERNS_64[lane2].name} [${start}-${end-1}]:</span>`;
+                
+                for (let i = start; i < end; i++) {
+                    const className = bin1[i] === bin2[i] ? 'bit-same' : 'bit-diff';
+                    html += `<div class="bit-box ${className}" title="Bit ${i}">${bin2[i]}</div>`;
+                }
+                html += '</div>';
+                
+                html += '<div style="height: 10px;"></div>';
+            }
+            
+            comparisonDiv.innerHTML = html;
+            
+            // 显示统计
+            const errorDetectable = distance - 1;
+            const errorCorrectable = Math.floor((distance - 1) / 2);
+            
+            statsDiv.innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-label">汉明距离:</span>
+                    <span class="stat-value" style="font-size: 1.8em; color: ${distance >= 10 ? '#2ecc71' : '#e74c3c'};">
+                        ${distance}
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">可检测错误位数:</span>
+                    <span class="stat-value">${errorDetectable} bits</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">可纠正错误位数:</span>
+                    <span class="stat-value">${errorCorrectable} bits</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">相似度:</span>
+                    <span class="stat-value">${((64 - distance) / 64 * 100).toFixed(2)}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">标准符合性:</span>
+                    <span class="stat-value">${distance >= 10 ? '✓ 符合IEEE 802.3bs (HD ≥ 10)' : '✗ 不符合标准'}</span>
+                </div>
+            `;
+            
+            // 滚动到结果
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 随机选择两个Lane
+        function selectRandomPair() {
+            // 清除之前的选择
+            selectedLanes.forEach(id => {
+                document.getElementById(`lane-${id}`).classList.remove('selected');
+            });
+            selectedLanes = [];
+            
+            // 随机选择
+            const lane1 = Math.floor(Math.random() * 8);
+            let lane2 = Math.floor(Math.random() * 8);
+            while (lane2 === lane1) {
+                lane2 = Math.floor(Math.random() * 8);
+            }
+            
+            selectLane(lane1);
+            selectLane(lane2);
+        }
+
+        // 计算完整汉明距离矩阵
+        function calculateHammingMatrix() {
+            hammingMatrix = [];
+            for (let i = 0; i < 8; i++) {
+                hammingMatrix[i] = [];
+                const hex1 = AM_PATTERNS_64[i].hex.replace(/\s+/g, '');
+                const bin1 = hexToBinary(hex1);
+                
+                for (let j = 0; j < 8; j++) {
+                    const hex2 = AM_PATTERNS_64[j].hex.replace(/\s+/g, '');
+                    const bin2 = hexToBinary(hex2);
+                    hammingMatrix[i][j] = calculateHammingDistance(bin1, bin2);
+                }
+            }
+            return hammingMatrix;
+        }
+
+        // 显示汉明距离矩阵
+        function showHammingMatrix() {
+            const matrix = calculateHammingMatrix();
+            const display = document.getElementById('matrixDisplay');
+            
+            let html = '<table><thead><tr><th>Lane</th>';
+            for (let i = 0; i < 8; i++) {
+                html += `<th>L${i}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            
+            for (let i = 0; i < 8; i++) {
+                html += `<tr><th>L${i}</th>`;
+                for (let j = 0; j < 8; j++) {
+                    const distance = matrix[i][j];
+                    let bgColor = '';
+                    
+                    if (i === j) {
+                        bgColor = '#ecf0f1';
+                    } else if (distance >= 15) {
+                        bgColor = '#d4edda';
+                    } else if (distance >= 10) {
+                        bgColor = '#fff3cd';
+                    } else {
+                        bgColor = '#f8d7da';
+                    }
+                    
+                    html += `<td style="background: ${bgColor}; font-weight: bold;">${distance}</td>`;
+                }
+                html += '</tr>';
+            }
+            
+            html += '</tbody></table>';
+            
+            // 添加统计信息
+            let minDistance = Infinity;
+            let maxDistance = 0;
+            let totalDistance = 0;
+            let count = 0;
+            
+            for (let i = 0; i < 8; i++) {
+                for (let j = i + 1; j < 8; j++) {
+                    const dist = matrix[i][j];
+                    minDistance = Math.min(minDistance, dist);
+                    maxDistance = Math.max(maxDistance, dist);
+                    totalDistance += dist;
+                    count++;
+                }
+            }
+            
+            const avgDistance = (totalDistance / count).toFixed(2);
+            
+            html += `
+            <div class="stats-panel" style="margin-top: 20px;">
+                <div class="stat-item">
+                    <span class="stat-label">最小汉明距离:</span>
+                    <span class="stat-value" style="color: ${minDistance >= 10 ? '#2ecc71' : '#e74c3c'};">
+                        ${minDistance} ${minDistance >= 10 ? '✓' : '✗'}
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">最大汉明距离:</span>
+                    <span class="stat-value">${maxDistance}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">平均汉明距离:</span>
+                    <span class="stat-value">${avgDistance}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">符合标准的Lane对:</span>
+                    <span class="stat-value">${count} / ${count} (${minDistance >= 10 ? '100%' : '0%'})</span>
+                </div>
+            </div>`;
+            
+            display.innerHTML = html;
+        }
+
+        // 高亮最小距离
+        function highlightMinDistance() {
+            const matrix = calculateHammingMatrix();
+            let minDist = Infinity;
+            let minPairs = [];
+            
+            for (let i = 0; i < 8; i++) {
+                for (let j = i + 1; j < 8; j++) {
+                    if (matrix[i][j] < minDist) {
+                        minDist = matrix[i][j];
+                        minPairs = [[i, j]];
+                    } else if (matrix[i][j] === minDist) {
+                        minPairs.push([i, j]);
+                    }
+                }
+            }
+            
+            showHammingMatrix();
+            
+            // 添加高亮提示
+            const display = document.getElementById('matrixDisplay');
+            let alertHtml = `
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>⚠️ 最小汉明距离分析：</strong><br>
+                最小汉明距离 = <strong style="font-size: 1.5em; color: ${minDist >= 10 ? '#2ecc71' : '#e74c3c'};">
+                    ${minDist}
+                </strong><br><br>
+                出现在以下Lane对：<br>
+                ${minPairs.map(pair => `<span class="info-tag ${minDist >= 10 ? 'tag-success' : 'tag-danger'}">
+                    Lane ${pair[0]} ↔ Lane ${pair[1]}
+                </span>`).join('')}<br><br>
+                <strong>评估：</strong>${minDist >= 10 ? 
+                    '✓ 符合IEEE 802.3bs标准 (最小汉明距离 ≥ 10)' : 
+                    '✗ 不符合标准，存在误识别风险！'}
+            </div>`;
+            
+            display.innerHTML += alertHtml;
+        }
+
+        // 计算所有距离
+        function calculateAll() {
+            showHammingMatrix();
+            highlightMinDistance();
+        }
+
+        // 模拟误码
+        function simulateError() {
+            if (selectedLanes.length !== 2) {
+                alert('请先选择两个Lane进行比较！');
+                return;
+            }
+            
+            const [lane1, lane2] = selectedLanes;
+            const hex1 = AM_PATTERNS_64[lane1].hex.replace(/\s+/g, '');
+            const hex2 = AM_PATTERNS_64[lane2].hex.replace(/\s+/g, '');
+            const bin1 = hexToBinary(hex1);
+            let bin2 = hexToBinary(hex2);
+            
+            // 随机引入3-5个错误
+            const errorCount = 3 + Math.floor(Math.random() * 3);
+            let bin2Array = bin2.split('');
+            
+            const errorPositions = [];
+            for (let i = 0; i < errorCount; i++) {
+                let pos;
+                do {
+                    pos = Math.floor(Math.random() * 64);
+                } while (errorPositions.includes(pos));
+                
+                errorPositions.push(pos);
+                bin2Array[pos] = bin2Array[pos] === '0' ? '1' : '0';
+            }
+            
+            bin2 = bin2Array.join('');
+            const newDistance = calculateHammingDistance(bin1, bin2);
+            
+            // 显示结果
+            displayComparison(lane1, lane2, bin1, bin2, newDistance);
+            
+            // 添加错误提示
+            const statsDiv = document.getElementById('statsPanel');
+            statsDiv.innerHTML += `
+            <div class="stat-item" style="border-left-color: #e74c3c;">
+                <span class="stat-label">⚠️ 模拟误码:</span>
+                <span class="stat-value">${errorCount} bits (位置: ${errorPositions.sort((a,b)=>a-b).join(', ')})</span>
+            </div>
+            <div class="stat-item" style="border-left-color: ${newDistance >= 10 ? '#2ecc71' : '#e74c3c'};">
+                <span class="stat-label">误码后汉明距离:</span>
+                <span class="stat-value">${newDistance} ${newDistance >= 10 ? '(仍可识别 ✓)' : '(可能误判 ✗)'}</span>
+            </div>`;
+        }
+
+        // 重置演示
+        function resetDemo() {
+            selectedLanes.forEach(id => {
+                document.getElementById(`lane-${id}`).classList.remove('selected');
+            });
+            selectedLanes = [];
+            
+            document.getElementById('hammingResult').style.display = 'none';
+            document.getElementById('matrixDisplay').innerHTML = '';
+        }
+
+        // 页面加载初始化
+        window.addEventListener('load', () => {
+            initAMCards();
+            
+            // 添加淡入动画
+            const sections = document.querySelectorAll('.theory-section, .demo-section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    section.style.transition = 'all 0.6s ease';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, index * 150);
+            });
+        });
+    </script>
+</body>
+</html>
